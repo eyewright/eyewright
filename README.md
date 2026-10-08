@@ -34,29 +34,35 @@ uv run oracle gate --state "..." --question "Is the task complete?"
 uv run oracle serve --port 8090
 # GET  /health
 # POST /v1/gate  {"state": "...", "question": "..."}                  -> {p_done, decision, trace}
-# POST /v1/ask   {"state": "...", "question": "...", "choices"?: {}}  -> {kind, answer, confidence, trace}
+# POST /v1/ask   {"state": "...", "question": "...", "choices"?|"levels"?, "engine"?: "generative"|"auto"}  -> {kind, answer, confidence, ...}
 ```
 
 **MCP** (for any AI harness; needs the `mcp` extra)
 ```powershell
 uv run --extra mcp oracle mcp
-# tools: oracle_gate(state, question), oracle_ask(state, question, choices?)
+# tools: oracle_gate(state, question), oracle_ask(state, question, choices?, engine?)
 ```
 Smoke test: `uv run --extra mcp python tests/mcp_smoke.py`.
 
 Config for all four faces: `examples/gate.json` (primary + consults +
 thresholds). Pass `--config <path>` elsewhere.
 
-## What "any decision" means here
+## Engines behind `ask`
 
-- **Yes/no** (no `choices`): the full three-eye policy runs — the committee
-  decides, and the trace shows every eye.
-- **Choose one** (`choices`) and **rate** (`levels`): the primary decision
-  model answers; committee policy is defined for yes/no.
-- **Open-ended questions** with no typed answer: reserve for the *generative
-  adjudicator* engine behind the same `ask` facade (the decide-engine shootout
-  ticket). Where a deterministic check exists (`a > b`), call the check — the
-  Oracle is for judgment, not arithmetic.
+| engine | what runs | notes |
+|---|---|---|
+| `typed` (default) | yes/no: the three-eye committee; choose/rate: the primary decision model | specialist domain; committee trace |
+| `generative` | a local LLM (`gemma4:12b` via the config's `generative` block) with a strict JSON contract | returns answer + reason; confidence is the model's own estimate — **not calibrated yet** (`"calibrated": false`) |
+| `auto` | typed first; generative fallback when the typed path errors or has no signal | needs a `generative` block |
+
+```powershell
+uv run oracle ask --engine generative --state "a = 1, b = 2" --question "Is b greater than a?"
+# -> {"kind": "noul", "answer": "yes", "confidence": 1.0, "reason": "...", "calibrated": false}
+uv run oracle ask --engine auto --state "..." --question "..."
+```
+
+Where a deterministic check exists (`a > b`), call the check — the Oracle is for
+judgment, not arithmetic.
 
 Gate confidence on any von map must read the pre-band posterior (`noul_raw`);
 von is retired from the consult roster (2026-10-06). See `docs/THREE-EYE.md`.
@@ -82,6 +88,9 @@ von is retired from the consult roster (2026-10-06). See `docs/THREE-EYE.md`.
 ## Roadmap
 
 1. ✅ `oracle ask` (package + CLI) and `oracle serve` (HTTP).
-2. ✅ `oracle mcp` (stdio MCP: `oracle_gate`, `oracle_ask`).
-3. Next: wire as a verifier provider into an agent control plane's Audit plane / control-plane's
-   verifier family (advisory, never the truth); generative engine behind `ask`.
+2. ✅ `oracle mcp` (stdio MCP: `oracle_gate`, `oracle_ask`) — wired into the
+   OpenCode and Cursor configs.
+3. ✅ Generative engine behind `ask` (`--engine generative` / `auto`).
+4. Next: post-hoc calibration of the generative engine (ticket path D); wire as
+   a verifier provider into an agent control plane's Audit plane / control-plane's verifier
+   family (advisory, never the truth).

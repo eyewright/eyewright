@@ -27,6 +27,8 @@ def main(argv=None):
     a.add_argument("--question", required=True)
     a.add_argument("--choices", help="JSON object: option key -> description (choice)")
     a.add_argument("--levels", help="JSON array of level descriptions (score)")
+    a.add_argument("--engine", default="typed", choices=["typed", "generative", "auto"],
+                   help="typed (decision models; default), generative (local LLM), or auto (typed, fall back)")
     a.add_argument("--config", default="examples/gate.json")
 
     s = sub.add_parser("serve", help="HTTP service (/v1/gate, /v1/ask)")
@@ -47,7 +49,8 @@ def main(argv=None):
     if args.cmd == "ask":
         choices = json.loads(args.choices) if args.choices else None
         levels = json.loads(args.levels) if args.levels else None
-        print(json.dumps(ask(cfg, args.state, args.question, choices=choices, levels=levels), indent=2))
+        engine = None if args.engine == "typed" else args.engine
+        print(json.dumps(ask(cfg, args.state, args.question, choices=choices, levels=levels, engine=engine), indent=2))
         return 0
     if args.cmd == "serve":
         from .server import serve

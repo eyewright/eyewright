@@ -48,7 +48,8 @@ def make_handler(cfg):
                     self._send(200, {"p_done": round(p, 4), "decision": trace.get("decision"), "trace": trace})
                 elif self.path == "/v1/ask":
                     out = ask(cfg, body.get("state", ""), body.get("question", ""),
-                              choices=body.get("choices"), levels=body.get("levels"))
+                              choices=body.get("choices"), levels=body.get("levels"),
+                              engine=body.get("engine"))
                     self._send(200, out)
                 else:
                     self._send(404, {"error": "not found"})

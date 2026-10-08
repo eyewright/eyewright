@@ -48,12 +48,17 @@ def call_engine(entry, state, questions):
     raise ValueError(f"unknown engine type {t!r}")
 
 
-def ask(cfg, state, question, choices=None, levels=None, qid="q"):
+def ask(cfg, state, question, choices=None, levels=None, engine=None, qid="q"):
     """One decision. `choices` -> choice question; `levels` -> score; else yes/no (noul).
 
-    The noul path runs the three-eye gate (`decide_gate`) over the whole config;
-    choice/score use the primary engine only (the committee policy is defined
-    for yes/no).
+    engine:
+      None / "typed" -> the decision models: noul runs the three-eye gate;
+                        choice/score use the primary engine.
+      "generative"   -> the local generative adjudicator (cfg["generative"]) answers
+                        with a strict JSON contract; its confidence is the model's
+                        own estimate (``"calibrated": false``).
+      "auto"         -> typed first; fall back to the generative engine when the
+                        typed path errors or has no signal (needs a generative block).
     """
     if choices:
         questions = {qid: {"type": "choice", "instructions": question, "criteria": choices}}
@@ -65,15 +70,27 @@ def ask(cfg, state, question, choices=None, levels=None, qid="q"):
         questions = {qid: {"type": "noul", "instructions": question}}
         kind = "noul"
 
+    if engine == "generative":
+        from .generative import ask_generative
+
+        return ask_generative(cfg, state, question, choices=choices, levels=levels, kind=kind)
+
     if kind == "noul":
         p, trace = decide_gate(cfg, state, question)
-        return {
+        out = {
             "kind": "noul",
             "answer": "yes" if p >= 0.5 else "no",
             "confidence": round(max(p, 1 - p), 4),
             "p_true": round(p, 4),
             "trace": trace,
         }
+        if engine == "auto" and trace.get("decision") == "none" and cfg.get("generative"):
+            from .generative import ask_generative
+
+            fb = ask_generative(cfg, state, question, choices=choices, levels=levels, kind=kind)
+            fb["fallback"] = "typed->generative"
+            return fb
+        return out
 
     entry = cfg.get("primary")
     if not entry:
@@ -81,6 +98,12 @@ def ask(cfg, state, question, choices=None, levels=None, qid="q"):
     try:
         resp = call_engine(entry, state, questions)
     except Exception as e:
+        if engine == "auto" and cfg.get("generative"):
+            from .generative import ask_generative
+
+            fb = ask_generative(cfg, state, question, choices=choices, levels=levels, kind=kind)
+            fb["fallback"] = "typed->generative"
+            return fb
         return {"kind": kind, "answer": None, "confidence": None, "error": str(e)[:200]}
     ans = (resp.get("answers") or {}).get(qid) or {}
     probs = ans.get("probabilities") or {}
@@ -92,7 +115,7 @@ def ask(cfg, state, question, choices=None, levels=None, qid="q"):
     else:
         answer = ans.get("score")
         conf = ans.get("confidence")
-    return {
+    out = {
         "kind": kind,
         "answer": answer,
         "confidence": round(float(conf), 4) if conf is not None else None,
@@ -100,3 +123,10 @@ def ask(cfg, state, question, choices=None, levels=None, qid="q"):
         "model": resp.get("model"),
         "trace": {"engine": entry.get("name") or entry.get("model") or entry.get("type")},
     }
+    if engine == "auto" and out.get("answer") is None and cfg.get("generative"):
+        from .generative import ask_generative
+
+        fb = ask_generative(cfg, state, question, choices=choices, levels=levels, kind=kind)
+        fb["fallback"] = "typed->generative"
+        return fb
+    return out
