@@ -1,9 +1,8 @@
 # oracle
 
 **The Oracle** — the decision core of the local-agent stack. A committee of local
-decision models behind one typed gate, used at the *decide* step of
-[Orbit](../orbit) and by any gate that needs a judgment where a deterministic
-check cannot decide.
+decision models behind one callable: used at the *decide* step of
+[Orbit](../orbit), and available to any program or AI harness.
 
 - **Third eye (main):** `laya-typed-decisions` — local specialist, 0.766 acc /
   Brier 0.019 on the typed-decisions bench.
@@ -12,58 +11,77 @@ check cannot decide.
   agreeing → consensus; one confident + another within 0.05 of main →
   review-conflict → the caller gathers more evidence.
 
-Policy details and evidence: `docs/THREE-EYE.md`, `docs/GATE-ANALYSIS.md`,
-`docs/RESULTS.md`, `docs/ENSEMBLE.md`.
+## Four ways to call it
+
+**Python**
+```python
+from oracle import ask
+
+result = ask(cfg, "a = 1, b = 2", "Which relation holds?",
+             choices={"a_bigger": "a is bigger", "b_bigger": "b is bigger"})
+# -> {"kind": "choice", "answer": "b_bigger", "confidence": 0.0038, ...}
+```
+
+**CLI**
+```powershell
+uv run oracle ask  --state "The sky is blue." --question "Is the statement true?"
+uv run oracle ask  --state "a = 1, b = 2" --question "Which relation holds?" --choices '{"a_bigger":"a is bigger","b_bigger":"b is bigger"}'
+uv run oracle gate --state "..." --question "Is the task complete?"
+```
+
+**HTTP** (for any language)
+```powershell
+uv run oracle serve --port 8090
+# GET  /health
+# POST /v1/gate  {"state": "...", "question": "..."}                  -> {p_done, decision, trace}
+# POST /v1/ask   {"state": "...", "question": "...", "choices"?: {}}  -> {kind, answer, confidence, trace}
+```
+
+**MCP** (for any AI harness; needs the `mcp` extra)
+```powershell
+uv run --extra mcp oracle mcp
+# tools: oracle_gate(state, question), oracle_ask(state, question, choices?)
+```
+Smoke test: `uv run --extra mcp python tests/mcp_smoke.py`.
+
+Config for all four faces: `examples/gate.json` (primary + consults +
+thresholds). Pass `--config <path>` elsewhere.
+
+## What "any decision" means here
+
+- **Yes/no** (no `choices`): the full three-eye policy runs — the committee
+  decides, and the trace shows every eye.
+- **Choose one** (`choices`) and **rate** (`levels`): the primary decision
+  model answers; committee policy is defined for yes/no.
+- **Open-ended questions** with no typed answer: reserve for the *generative
+  adjudicator* engine behind the same `ask` facade (the decide-engine shootout
+  ticket). Where a deterministic check exists (`a > b`), call the check — the
+  Oracle is for judgment, not arithmetic.
+
+Gate confidence on any von map must read the pre-band posterior (`noul_raw`);
+von is retired from the consult roster (2026-10-06). See `docs/THREE-EYE.md`.
 
 ## Layout
 
-- `oracle/gate.py` — canonical gate policy (`decide_gate`) + systemone clients.
-- `bench/` — the validation bench and saved responses (600-noul gate proxy,
-  2,000-decision committee replay, von calibration check).
-- `docs/` — THREE-EYE, GATE-ANALYSIS, RESULTS, ENSEMBLE.
-
-## Use from Python
-
-```python
-from oracle.gate import decide_gate
-
-cfg = {  # or take stages.decide from the orbit repo's config.json
-    "accept_threshold": 0.75,
-    "consult_threshold": 0.55,
-    "high_confidence": 0.9,
-    "match_delta": 0.05,
-    "primary": {
-        "name": "laya-td", "type": "systemone-http",
-        "url": "http://127.0.0.1:8000/v1/systemone",
-        "key_file": r"~/.config/eyewright\.laya-api-key",
-    },
-    "consults": [
-        {"name": "tev1:4b", "type": "systemone-ollama", "model": "tev1:4b"},
-        {"name": "laya-multilingual", "type": "systemone-http",
-         "url": "http://127.0.0.1:8000/v1/systemone", "model": "multilingual",
-         "key_file": r"~/.config/eyewright\.laya-api-key"},
-    ],
-}
-p_done, trace = decide_gate(cfg, state_text, "Is the task complete and correct so far, with no remaining blockers?")
-```
-
-Note: when a von map is used, gate confidence must read the pre-band posterior
-(`noul_raw`) — the band rule compresses `noul` into `[0.80, 0.85]` /
-`[0.15, 0.20]`. Von is retired from the consult roster (2026-10-06); see
-`docs/THREE-EYE.md`.
+- `oracle/gate.py` — three-eye policy (`decide_gate`) + systemone clients.
+- `oracle/decide.py` — `ask()`: one call, any typed decision.
+- `oracle/server.py` — `oracle serve` HTTP service.
+- `oracle/mcp_server.py` — `oracle mcp` stdio MCP tools.
+- `oracle/cli.py` — `oracle gate|ask|serve|mcp`.
+- `bench/` — validation bench + saved responses; `docs/` — THREE-EYE,
+  GATE-ANALYSIS, RESULTS, ENSEMBLE.
 
 ## Services it talks to
 
 | service | address | notes |
 |---|---|---|
-| laya-serve | `127.0.0.1:8000` | key file in `the private research repo/decision-bench/`; `"model":"multilingual"` forces the multilingual checkpoint |
+| laya-serve | `127.0.0.1:8000` | key file in `the private research repo/decision-bench/`; `"model":"multilingual"` forces that checkpoint |
 | Ollama | `127.0.0.1:11434` | `tev1:4b` via `/v1/systemone` |
 | von | `127.0.0.1:8001` | `von-sdk`; retired as a consult |
 
 ## Roadmap
 
-1. `oracle serve` — one local HTTP endpoint (`/v1/gate`) wrapping the policy, so
-   orbit/an agent control plane/control-plane call it deterministically.
-2. MCP adapter (`oracle.gate` tool) — any harness can ask for a gate call.
-3. Wire as a verifier provider into an agent control plane's Audit plane / control-plane's
-   verifier family (advisory, never the truth; external checks decide "done").
+1. ✅ `oracle ask` (package + CLI) and `oracle serve` (HTTP).
+2. ✅ `oracle mcp` (stdio MCP: `oracle_gate`, `oracle_ask`).
+3. Next: wire as a verifier provider into an agent control plane's Audit plane / control-plane's
+   verifier family (advisory, never the truth); generative engine behind `ask`.

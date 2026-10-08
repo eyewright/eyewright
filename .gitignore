@@ -4,3 +4,4 @@ __pycache__/
 *api-key*
 *.key
 .env
+*.log
