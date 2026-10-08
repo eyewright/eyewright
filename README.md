@@ -44,6 +44,20 @@ uv run --extra mcp oracle mcp
 ```
 Smoke test: `uv run --extra mcp python tests/mcp_smoke.py`.
 
+Wired into OpenCode + Cursor on this machine. Use the **venv exe directly** so a
+harness reload never triggers a `uv sync`/lock cycle:
+
+```jsonc
+"oracle": {
+  "type": "local",
+  "command": ["C:/Users/<user>/projects/oracle/.venv/Scripts/oracle.exe", "mcp",
+              "--config", "C:/Users/<user>/projects/oracle/examples/gate.json"],
+  "cwd": "C:/Users/<user>/projects/oracle"
+}
+```
+
+Setup: `uv sync --extra mcp` once so the venv has the `mcp` extra.
+
 Config for all four faces: `examples/gate.json` (primary + consults +
 thresholds). Pass `--config <path>` elsewhere.
 
