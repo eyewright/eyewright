@@ -28,13 +28,15 @@ def build(cfg):
         return {"p_done": round(p, 4), "decision": trace.get("decision"), "trace": trace}
 
     @mcp.tool()
-    def oracle_ask(state: str, question: str, choices: dict | None = None) -> dict:
+    def oracle_ask(state: str, question: str, choices: dict | None = None, engine: str | None = None) -> dict:
         """Ask the Oracle a typed decision.
 
-        With `choices` (option -> description) it picks an option; without, it is
-        a yes/no judgment. Returns answer, confidence, and the trace.
+        With `choices` (option -> description) it picks an option; without, it is a
+        yes/no judgment. `engine`: None/typed (decision models), "generative" (local
+        LLM adjudicator, uncalibrated), or "auto" (typed, fall back to generative).
+        Returns answer, confidence, and the trace.
         """
-        return ask(cfg, state, question, choices=choices)
+        return ask(cfg, state, question, choices=choices, engine=engine)
 
     return mcp
 

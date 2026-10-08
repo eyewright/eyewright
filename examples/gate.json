@@ -18,5 +18,11 @@
   "accept_threshold": 0.75,
   "consult_threshold": 0.55,
   "high_confidence": 0.9,
-  "match_delta": 0.05
+  "match_delta": 0.05,
+  "generative": {
+    "type": "ollama",
+    "model": "gemma4:12b",
+    "options": { "temperature": 0, "num_predict": 200 },
+    "think": false
+  }
 }
