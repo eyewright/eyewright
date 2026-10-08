@@ -1,0 +1,54 @@
+{
+  "model_type": "option_marker",
+  "base_model": "wfzyx/von-1.1",
+  "model_id": "von-1.2.0",
+  "independent_options": true,
+  "best_val_accuracy": 0.9472,
+  "temperature": 2.2,
+  "timestamp": 1790207664.1941526,
+  "noul_zero_shot_prior": {
+    "a": -0.5,
+    "b": 0.3
+  },
+  "noul_zero_shot_prior_fitted_on": "benchmarks/data/noul_zeroshot_dev.jsonl (150 boolq validation + 25 handwritten, never jabr/JevBench)",
+  "training": {
+    "recipe": "full retrain from von-1.1 weights, independent_options=True, 1 epoch, lr 3e-5, batch 8 x accum 2 x 4 GPU",
+    "corpus": "290k universal + 40k long-context + 40k synthetic two-hop/numeric, overlap_target 0.32",
+    "order_invariance": "each option's logit is a function of (state, that option) only: cross-option attention blocked, per-option position ids reset to prefix length, sliding window computed from those ids; 0/111 flips on JevBench hard x 4 orderings"
+  },
+  "calibration_map": {
+    "bias": 185.8296,
+    "entropy": -27.473,
+    "log_tokens": -296.379,
+    "n_options": 48.521,
+    "lo": 0.3,
+    "hi": 12.0
+  },
+  "calibration_map_features": "T = bias + entropy*H_norm + log_tokens*log10(state_tokens)/4 + n_options*(K/8), clamped to [lo,hi]",
+  "calibration_fitted_on": "von calibrate: 1800 labelled rows from von-labels-train.jsonl; objective NLL; 5-fold CV chose map",
+  "calibration_report": {
+    "n": 1800,
+    "folds": 5,
+    "cv_nll": {
+      "scalar": 0.6591,
+      "map": 0.6428
+    },
+    "in_sample_nll": {
+      "raw_T1": 1.8649,
+      "scalar": 0.6591,
+      "map": 0.6379,
+      "shipped": 0.6645
+    },
+    "ece": {
+      "raw_T1": 0.2659,
+      "scalar": 0.0978,
+      "map": 0.0689,
+      "shipped": 0.0847
+    },
+    "scalar_temperature": 12.0076,
+    "winner": "map"
+  },
+  "calibration_timestamp": 1791323198.5110052,
+  "calibrated_with_engine": "von-sdk 1.3.7",
+  "weights_id": "von-1.2.0"
+}
