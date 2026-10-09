@@ -73,10 +73,13 @@ def ask_ollama(model, prompt, timeout=600):
 
 
 def ask_openrouter(model, prompt, timeout=180):
+    # 2000 tokens of headroom: the router sometimes routes to reasoning models
+    # (e.g. deepseek-v4.1-flash) that burn hundreds of tokens of hidden reasoning
+    # before the JSON answer. At 800, ~7% of calls hit finish=length with no content.
     resp = _post(
         "https://openrouter.ai/api/v1/chat/completions",
         {"model": model, "messages": [{"role": "user", "content": prompt}],
-         "temperature": 0, "max_tokens": 800},
+         "temperature": 0, "max_tokens": 2000},
         {"Content-Type": "application/json", "Authorization": "Bearer " + KEY,
          "HTTP-Referer": "http://localhost", "X-Title": "oracle-screening"}, timeout,
     )
