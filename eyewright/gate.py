@@ -1,7 +1,7 @@
-"""The Oracle: the three-eye decision gate over cheap local decision models.
+"""eyewright: the three-eye decision gate over cheap local decision models.
 
 Canonical policy implementation. Consumed by the orbit repo
-(``from oracle.gate import decide_gate``) and validated by ``bench/``
+(``from eyewright.gate import decide_gate``) and validated by ``bench/``
 (THREE-EYE.md, GATE-ANALYSIS.md).
 
 Policy per question:

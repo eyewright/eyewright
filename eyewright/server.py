@@ -1,4 +1,4 @@
-"""oracle serve - one local HTTP endpoint for decisions.
+"""eyewright serve - one local HTTP endpoint for decisions.
 
 Endpoints:
   GET  /health
@@ -19,7 +19,7 @@ from .gate import decide_gate
 
 def make_handler(cfg):
     class Handler(BaseHTTPRequestHandler):
-        server_version = f"oracle/{__version__}"
+        server_version = f"eyewright/{__version__}"
 
         def _send(self, code, obj):
             body = json.dumps(obj, ensure_ascii=False).encode()
@@ -31,7 +31,7 @@ def make_handler(cfg):
 
         def do_GET(self):
             if self.path in ("/health", "/"):
-                self._send(200, {"status": "ok", "service": "oracle", "version": __version__})
+                self._send(200, {"status": "ok", "service": "eyewright", "version": __version__})
             else:
                 self._send(404, {"error": "not found"})
 
@@ -57,12 +57,12 @@ def make_handler(cfg):
                 self._send(500, {"error": str(e)[:300]})
 
         def log_message(self, fmt, *args):
-            print("[oracle] " + fmt % args)
+            print("[eyewright] " + fmt % args)
 
     return Handler
 
 
 def serve(cfg, host="127.0.0.1", port=8090):
     httpd = ThreadingHTTPServer((host, port), make_handler(cfg))
-    print(f"oracle serving on http://{host}:{port}  (gate: /v1/gate, ask: /v1/ask)")
+    print(f"eyewright serving on http://{host}:{port}  (gate: /v1/gate, ask: /v1/ask)")
     httpd.serve_forever()

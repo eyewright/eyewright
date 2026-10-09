@@ -1,7 +1,7 @@
 """Score the screening roster on the 600-noul gate proxy (same policy as THREE-EYE).
 
 Solo stats + gate table (main / N consults), plus bootstrap CIs, exactly like the
-original Oracle-vs-laya comparison. Generative candidates are labelled: their
+original eyewright-vs-laya comparison. Generative candidates are labelled: their
 confidences are SELF-REPORTED (uncalibrated).
 
     uv run python compare_consults.py \
@@ -27,10 +27,18 @@ DEFAULTS = {
 ap = argparse.ArgumentParser()
 ap.add_argument("--extra", action="append", default=[], metavar="name=path")
 ap.add_argument("--cases", default="cases.jsonl")
+ap.add_argument("--main", default=MAIN)
+ap.add_argument("--consults", default="tev1:4b,laya-multilingual",
+                help="comma list of base consult names")
+ap.add_argument("--triple", action="append", default=[], metavar="a,b",
+                help="extra N-consult configs (comma list)")
+ap.add_argument("--no-defaults", action="store_true")
 ap.add_argument("--out", default=None)
 args = ap.parse_args()
 
-FILES = dict(DEFAULTS)
+MAIN_NAME = args.main
+BASE = [c.strip() for c in args.consults.split(",") if c.strip()]
+FILES = {} if args.no_defaults else dict(DEFAULTS)
 EXTRA = []
 for item in args.extra:
     name, _, path = item.partition("=")
@@ -157,25 +165,26 @@ def fmt_pct(x):
 
 
 def build_configs():
-    configs = [("incumbent: laya / tev1 + laya-ml", MAIN, ["tev1:4b", "laya-multilingual"])]
+    label = " + ".join(BASE)
+    configs = [(f"incumbent: {MAIN_NAME} / {label}", MAIN_NAME, BASE)]
     for x in EXTRA:
-        configs.append((f"laya / tev1 + {x}", MAIN, ["tev1:4b", x]))
-    configs += [
-        ("TRIPLE laya / tev1 + jev-1.13 + gemma4:12b", MAIN, ["tev1:4b", "jev-1.13", "gemma4:12b"]),
-        ("TRIPLE laya / tev1 + jev-router + gemma4:12b", MAIN, ["tev1:4b", "jev-router", "gemma4:12b"]),
-        ("laya / jev-1.13 + gemma4:12b (no tev1)", MAIN, ["jev-1.13", "gemma4:12b"]),
-    ]
-    for x in EXTRA:
-        configs.append((f"{x} main / tev1 + laya-ml", x, ["tev1:4b", "laya-multilingual"]))
-    configs.append(("reference: laya / tev1 + von", MAIN, ["tev1:4b", "von (retired)"]))
+        configs.append((f"{MAIN_NAME} / {label} + {x}", MAIN_NAME, BASE + [x]))
+    for t in args.triple:
+        ts = [c.strip() for c in t.split(",") if c.strip()]
+        configs.append((f"{MAIN_NAME} / {label} + {' + '.join(ts)}", MAIN_NAME, BASE + ts))
+    if len(BASE) >= 2:
+        for x in EXTRA:
+            configs.append((f"{x} main / {label}", x, BASE))
+    if "von (retired)" in tables:
+        configs.append((f"reference: {MAIN_NAME} / {label} + von", MAIN_NAME, BASE + ["von (retired)"]))
     return configs
 
 
 def main():
     lines = []
-    lines.append("# Screening run: Jev / Gemma / Jevify vs the Oracle on the 600-noul gate proxy (2026-10-09)")
+    lines.append("# Screening run: Jev / Gemma / Jevify vs eyewright on the 600-noul gate proxy (2026-10-09)")
     lines.append("")
-    lines.append("Same rows and policy as the original Oracle-vs-laya comparison (THREE-EYE.md):")
+    lines.append("Same rows and policy as the original eyewright-vs-laya comparison (THREE-EYE.md):")
     lines.append("main accept >= 0.75, reject <= 0.25, uncertain band consults; consensus = >= 2")
     lines.append("confident consults (>= 0.9) agreeing (majority for triples); conflict = one confident")
     lines.append("+ another consult within 0.05 of main.")

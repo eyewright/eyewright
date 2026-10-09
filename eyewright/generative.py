@@ -1,4 +1,4 @@
-"""oracle generative engine - a general-model adjudicator behind ``ask``.
+"""eyewright generative engine - a general-model adjudicator behind ``ask``.
 
 The typed engines (the laya/tev1 committee) answer the System One shape inside
 their training distribution. This engine covers questions outside it: a local

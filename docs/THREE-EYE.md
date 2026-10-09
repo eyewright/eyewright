@@ -70,7 +70,7 @@ As a consult eye with tev1:4b:
 | shipped | 0 | - | 9.2% | 100% | 19 |
 | calibrated | 1 | **0.0%** | 9.3% | 98.2% | 31 |
 
-Verdict: **retired from the Oracle.** The refit improved in-sample ECE (0.085 -> 0.069) but that
+Verdict: **retired from eyewright.** The refit improved in-sample ECE (0.085 -> 0.069) but that
 does not transfer (test Brier 0.2473 -> 0.2548, ECE 0.1246 -> 0.1252); it made von only slightly
 more willing to speak, its one consensus call was wrong, and its new confidence mostly surfaced
 as *conflict* (19 -> 31) rather than agreement. Von remains: an agent/tool-domain

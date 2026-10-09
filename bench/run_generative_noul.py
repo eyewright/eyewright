@@ -28,7 +28,7 @@ import urllib.request
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
-from oracle.generative import _extract_json
+from eyewright.generative import _extract_json
 
 ap = argparse.ArgumentParser()
 ap.add_argument("--engine", choices=["ollama", "openrouter", "openrouter-decisions"], required=True)
@@ -46,7 +46,7 @@ OPENROUTER_HEADERS = {
     "Content-Type": "application/json",
     "Authorization": "Bearer " + KEY,
     "HTTP-Referer": "http://localhost",
-    "X-Title": "oracle-screening",
+    "X-Title": "eyewright-screening",
 }
 PROVIDER = {"zdr": True} if args.zdr else None
 

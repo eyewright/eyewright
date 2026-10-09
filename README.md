@@ -1,8 +1,11 @@
-# oracle
+# eyewright
 
-**The Oracle** — the decision core of the local-agent stack. A committee of local
+**eyewright** — the decision core of the local-agent stack. A committee of local
 decision models behind one callable: used at the *decide* step of
 [Orbit](../orbit), and available to any program or AI harness.
+
+> **Name:** `eyewright` throughout — distribution, import, CLI, and MCP tools.
+> Decision + registry status: **ADR-0005** (`local-ai-system/docs/decisions/`).
 
 - **Third eye (main):** `laya-typed-decisions` — local specialist, 0.766 acc /
   Brier 0.019 on the typed-decisions bench.
@@ -14,8 +17,9 @@ decision models behind one callable: used at the *decide* step of
 ## Local-first, with an optional upgrade
 
 The default gate is **fully local** — Ollama (`gemma4:12b`, `tev1:4b`) plus a local
-Laya checkpoint. No prompts leave the machine; the numbers below are from the same
-600-noul gate proxy used to pick the local committee.
+Laya checkpoint. No prompts leave the machine; the numbers below come from the
+**frozen holdout** (600 rows held out of the 1,800-row train split; calibration fit
+on the other 1,200 — see `bench/HOLDOUT-2026-10-09.md`, `bench/RIGOR.md`).
 
 Individual eyes can optionally be upgraded to a **cloud model with ZDR routing**:
 `typesafe/jev-1.13` (Typesafe's System One decision model) is reachable through
@@ -23,15 +27,23 @@ OpenRouter's native decisions API and plugs in as a drop-in consult
 (`"type": "openrouter-decisions"`, `"zdr": true`, key from `OPENROUTER_API_KEY`) —
 see `examples/gate-jev.json`.
 
-Screening numbers (main = `laya-typed-decisions`; `bench/SCREENING-2026-10-09.md`;
-screening, not confirmatory — see `bench/RIGOR.md`):
+Frozen-holdout gate table (main = `laya-typed-decisions`; screening, not confirmatory):
 
 | gate | acted % | acted accuracy | network |
 |---|---|---|---|
-| local default: `tev1:4b + laya-multilingual` | 23.7% | 90.8% | none |
-| local System-2 add: `tev1:4b + gemma4:12b` | 34.3% | 94.7% | none |
-| cloud consult (precision): `tev1:4b + jev-1.13` | 10.0% | 100% | ZDR |
-| cloud main (automation): `jev-1.13 + tev1:4b + laya-multilingual` | 32.5% | 91.3% | ZDR |
+| local default trio: `tev1:4b + laya-multilingual` | 17.2% | 84.5% | none |
+| local System-2 add: `+ gemma4:12b` | 30.8% | 83.2% | none |
+| calibrated System-2 add: `+ gemma-cal` | 19.0% | 86.8% | none |
+| triple: `+ jev-router-raw + gemma-raw` | **40.2%** | 88.0% | ZDR |
+| calibrated triple: `+ jev-router-cal + gemma-cal` | 22.5% | **88.9%** | ZDR |
+| cloud main: `jev-1.13` main + `tev1:4b + laya-multilingual` | 25.8% | 86.5% | ZDR |
+
+Read: the weak link is `laya-multilingual` (its consensus calls are ~71% right on
+the holdout). Adding System-2 consults roughly doubles automation at equal-or-better
+acted accuracy; calibrating them raises precision further but fires less often
+(honest confidence clears the 0.9 bar rarely). Test-set continuity:
+`bench/SCREENING-2026-10-09-calibrated.md` (calibrated triple 30.3% @ 90.1% vs
+incumbent 23.7% @ 90.8%).
 
 ZDR here is **request-level routing** (`provider.zdr`), not a cryptographic
 guarantee: it keeps prompts away from providers that retain data, but only
@@ -40,14 +52,14 @@ of "nothing leaves the box" — is the point of making it a switch.
 
 ```powershell
 $env:OPENROUTER_API_KEY = "<key>"
-uv run oracle gate --config examples/gate-jev.json --state "..." --question "Is the task complete?"
+uv run eyewright gate --config examples/gate-jev.json --state "..." --question "Is the task complete?"
 ```
 
 ## Four ways to call it
 
 **Python**
 ```python
-from oracle import ask
+from eyewright import ask
 
 result = ask(cfg, "a = 1, b = 2", "Which relation holds?",
              choices={"a_bigger": "a is bigger", "b_bigger": "b is bigger"})
@@ -56,14 +68,14 @@ result = ask(cfg, "a = 1, b = 2", "Which relation holds?",
 
 **CLI**
 ```powershell
-uv run oracle ask  --state "The sky is blue." --question "Is the statement true?"
-uv run oracle ask  --state "a = 1, b = 2" --question "Which relation holds?" --choices '{"a_bigger":"a is bigger","b_bigger":"b is bigger"}'
-uv run oracle gate --state "..." --question "Is the task complete?"
+uv run eyewright ask  --state "The sky is blue." --question "Is the statement true?"
+uv run eyewright ask  --state "a = 1, b = 2" --question "Which relation holds?" --choices '{"a_bigger":"a is bigger","b_bigger":"b is bigger"}'
+uv run eyewright gate --state "..." --question "Is the task complete?"
 ```
 
 **HTTP** (for any language)
 ```powershell
-uv run oracle serve --port 8090
+uv run eyewright serve --port 8090
 # GET  /health
 # POST /v1/gate  {"state": "...", "question": "..."}                  -> {p_done, decision, trace}
 # POST /v1/ask   {"state": "...", "question": "...", "choices"?|"levels"?, "engine"?: "generative"|"auto"}  -> {kind, answer, confidence, ...}
@@ -71,8 +83,8 @@ uv run oracle serve --port 8090
 
 **MCP** (for any AI harness; needs the `mcp` extra)
 ```powershell
-uv run --extra mcp oracle mcp
-# tools: oracle_gate(state, question), oracle_ask(state, question, choices?, engine?)
+uv run --extra mcp eyewright mcp
+# tools: eyewright_gate(state, question), eyewright_ask(state, question, choices?, engine?)
 ```
 Smoke test: `uv run --extra mcp python tests/mcp_smoke.py`.
 
@@ -80,9 +92,9 @@ Wired into OpenCode + Cursor on this machine. Use the **venv exe directly** so a
 harness reload never triggers a `uv sync`/lock cycle:
 
 ```jsonc
-"oracle": {
+"eyewright": {
   "type": "local",
-  "command": ["C:/Users/kcpat/projects/oracle/.venv/Scripts/oracle.exe", "mcp",
+  "command": ["C:/Users/kcpat/projects/oracle/.venv/Scripts/eyewright.exe", "mcp",
               "--config", "C:/Users/kcpat/projects/oracle/examples/gate.json"],
   "cwd": "C:/Users/kcpat/projects/oracle"
 }
@@ -102,12 +114,12 @@ thresholds). Pass `--config <path>` elsewhere.
 | `auto` | typed first; generative fallback when the typed path errors or has no signal | needs a `generative` block |
 
 ```powershell
-uv run oracle ask --engine generative --state "a = 1, b = 2" --question "Is b greater than a?"
+uv run eyewright ask --engine generative --state "a = 1, b = 2" --question "Is b greater than a?"
 # -> {"kind": "noul", "answer": "yes", "confidence": 1.0, "reason": "...", "calibrated": false}
-uv run oracle ask --engine auto --state "..." --question "..."
+uv run eyewright ask --engine auto --state "..." --question "..."
 ```
 
-Where a deterministic check exists (`a > b`), call the check — the Oracle is for
+Where a deterministic check exists (`a > b`), call the check — eyewright is for
 judgment, not arithmetic.
 
 Gate confidence on any von map must read the pre-band posterior (`noul_raw`);
@@ -115,11 +127,11 @@ von is retired from the consult roster (2026-10-06). See `docs/THREE-EYE.md`.
 
 ## Layout
 
-- `oracle/gate.py` — three-eye policy (`decide_gate`) + systemone clients.
-- `oracle/decide.py` — `ask()`: one call, any typed decision.
-- `oracle/server.py` — `oracle serve` HTTP service.
-- `oracle/mcp_server.py` — `oracle mcp` stdio MCP tools.
-- `oracle/cli.py` — `oracle gate|ask|serve|mcp`.
+- `eyewright/gate.py` — three-eye policy (`decide_gate`) + systemone clients.
+- `eyewright/decide.py` — `ask()`: one call, any typed decision.
+- `eyewright/server.py` — `eyewright serve` HTTP service.
+- `eyewright/mcp_server.py` — `eyewright mcp` stdio MCP tools.
+- `eyewright/cli.py` — `eyewright gate|ask|serve|mcp`.
 - `bench/` — validation bench + saved responses; `docs/` — THREE-EYE,
   GATE-ANALYSIS, RESULTS, ENSEMBLE.
 
@@ -127,14 +139,18 @@ von is retired from the consult roster (2026-10-06). See `docs/THREE-EYE.md`.
 
 | service | address | notes |
 |---|---|---|
-| laya-serve | `127.0.0.1:8000` | key file in `model-lab/decision-bench/`; `"model":"multilingual"` forces that checkpoint |
+| laya-serve | `127.0.0.1:8000` | key file in `model-lab/decision-bench/`. **Default checkpoint is `english`** — always pass `"model":"typed-decisions"` for the specialist (or `"multilingual"`); the router only auto-routes when `LAYA_AUTO_TASK=1` |
 | Ollama | `127.0.0.1:11434` | `tev1:4b` via `/v1/systemone` |
 | von | `127.0.0.1:8001` | `von-sdk`; retired as a consult |
 
+> **Gotcha (2026-10-09):** `laya-serve`'s default checkpoint is `english`. A gate
+> entry that omits `"model"` silently uses the wrong main eye (measured on the noul
+> proxy: 0.44 vs 0.86 accuracy). Always pin `"model": "typed-decisions"`.
+
 ## Roadmap
 
-1. ✅ `oracle ask` (package + CLI) and `oracle serve` (HTTP).
-2. ✅ `oracle mcp` (stdio MCP: `oracle_gate`, `oracle_ask`) — wired into the
+1. ✅ `eyewright ask` (package + CLI) and `eyewright serve` (HTTP).
+2. ✅ `eyewright mcp` (stdio MCP: `eyewright_gate`, `eyewright_ask`) — wired into the
    OpenCode and Cursor configs.
 3. ✅ Generative engine behind `ask` (`--engine generative` / `auto`).
 4. Next: post-hoc calibration of the generative engine (ticket path D); wire as

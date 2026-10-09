@@ -17,6 +17,7 @@ import math
 
 ap = argparse.ArgumentParser()
 ap.add_argument("--name", required=True)
+ap.add_argument("--map", choices=["iso", "platt"], default="iso")
 ap.add_argument("--raw-train", required=True)
 ap.add_argument("--raw-test", required=True)
 ap.add_argument("--out-train-cal", required=True)
@@ -142,7 +143,7 @@ for label, pts in (("fit", fit_pts), ("holdout", hold_pts), ("test", test_pts)):
           f"{str(ece_brier(pts, m_iso)):<20} {str(ece_brier(pts, m_platt)):<20}")
 
 
-def write_cal(src, dst, fn):
+def write_cal(src, dst, fn, name):
     with open(dst, "w", encoding="utf-8") as fo:
         for line in open(src, encoding="utf-8"):
             r = json.loads(line)
@@ -153,10 +154,12 @@ def write_cal(src, dst, fn):
                     a["noul"] = c
                     a["noul_raw"] = c
                     a["calibrated_from"] = round(float(p), 4)
-                    a["calibration"] = "isotonic"
+                    a["calibration"] = name
             fo.write(json.dumps(r, ensure_ascii=False) + "\n")
 
 
-write_cal(args.raw_train, args.out_train_cal, m_iso)
-write_cal(args.raw_test, args.out_test_cal, m_iso)
-print(f"\nwrote {args.out_train_cal} and {args.out_test_cal}")
+chosen = m_iso if args.map == "iso" else m_platt
+map_name = "isotonic" if args.map == "iso" else "platt"
+write_cal(args.raw_train, args.out_train_cal, chosen, map_name)
+write_cal(args.raw_test, args.out_test_cal, chosen, map_name)
+print(f"\nwrote {args.out_train_cal} and {args.out_test_cal} ({map_name})")

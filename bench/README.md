@@ -1,6 +1,6 @@
 # bench
 
-Validation bench for the Oracle's gate policy. Scripts run **from this
+Validation bench for eyewright's gate policy. Scripts run **from this
 directory** (they read the saved response files by name).
 
 - `three_eye_analysis.py` — consult-pair selection on the 600-noul gate proxy

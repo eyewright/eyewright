@@ -1,6 +1,6 @@
-# Screening run: Jev / Gemma / Jevify vs the Oracle on the 600-noul gate proxy (2026-10-09)
+# Screening run: Jev / Gemma / Jevify vs eyewright on the 600-noul gate proxy (2026-10-09)
 
-Same rows and policy as the original Oracle-vs-laya comparison (THREE-EYE.md):
+Same rows and policy as the original eyewright-vs-laya comparison (THREE-EYE.md):
 main accept >= 0.75, reject <= 0.25, uncertain band consults; consensus = >= 2
 confident consults (>= 0.9) agreeing (majority for triples); conflict = one confident
 + another consult within 0.05 of main.

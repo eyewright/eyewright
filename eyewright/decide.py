@@ -1,6 +1,6 @@
-"""oracle.ask - one call, any typed decision.
+"""eyewright.ask - one call, any typed decision.
 
-The Oracle's second face: not just the three-eye "done" gate, but a single
+eyewright's second face: not just the three-eye "done" gate, but a single
 callable for typed decisions:
 
   - noul (no choices):     the three-eye gate policy on a yes/no question
@@ -9,8 +9,8 @@ callable for typed decisions:
 
 Uniform answer: {"kind", "answer", "confidence", "probabilities"?, "trace"}.
 
-Any program can call this in-process (``from oracle import ask``); ``oracle
-serve`` exposes it over HTTP and ``oracle mcp`` exposes it as MCP tools.
+Any program can call this in-process (``from eyewright import ask``); ``eyewright
+serve`` exposes it over HTTP and ``eyewright mcp`` exposes it as MCP tools.
 """
 
 import json
