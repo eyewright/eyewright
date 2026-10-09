@@ -1,4 +1,4 @@
-"""oracle CLI: gate | ask | serve | mcp."""
+"""eyewright CLI: gate | ask | serve | mcp."""
 
 import argparse
 import json
@@ -14,7 +14,7 @@ def _load_cfg(path):
 
 
 def main(argv=None):
-    ap = argparse.ArgumentParser(prog="oracle", description="The Oracle - local decision core")
+    ap = argparse.ArgumentParser(prog="eyewright", description="eyewright - local decision core")
     sub = ap.add_subparsers(dest="cmd", required=True)
 
     g = sub.add_parser("gate", help="three-eye gate on a claim")

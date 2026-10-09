@@ -1,4 +1,4 @@
-"""Bootstrap CIs for the incumbent Oracle gate on the 600-noul proxy.
+"""Bootstrap CIs for the incumbent eyewright gate on the 600-noul proxy.
 
 Read-only: quantifies how much of the headline THREE-EYE table is signal vs noise.
 No new inference. Run from bench/:

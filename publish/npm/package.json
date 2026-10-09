@@ -1,0 +1,27 @@
+{
+  "name": "eyewright",
+  "version": "0.0.1",
+  "description": "Name reservation for eyewright — the local decision gate. The tool itself is Python: pip install eyewright.",
+  "keywords": [
+    "eyewright",
+    "decision-gate",
+    "local-first",
+    "mcp",
+    "oracle"
+  ],
+  "homepage": "https://github.com/eyewright/eyewright",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/eyewright/eyewright.git"
+  },
+  "bugs": {
+    "url": "https://github.com/eyewright/eyewright/issues"
+  },
+  "author": "kcpatt27",
+  "license": "Apache-2.0",
+  "main": "index.js",
+  "files": [
+    "index.js",
+    "README.md"
+  ]
+}

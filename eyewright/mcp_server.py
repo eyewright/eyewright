@@ -1,11 +1,11 @@
-"""oracle mcp - the Oracle as MCP tools for any AI harness.
+"""eyewright mcp - eyewright as MCP tools for any AI harness.
 
 Tools:
-  oracle_gate(state, question)          -> three-eye gate: p_done + decision + trace
-  oracle_ask(state, question, choices?) -> typed decision (yes/no, or pick a choice)
+  eyewright_gate(state, question)          -> three-eye gate: p_done + decision + trace
+  eyewright_ask(state, question, choices?) -> typed decision (yes/no, or pick a choice)
 
-Run as a stdio MCP server: ``oracle mcp`` (needs the ``mcp`` extra:
-``uv run --extra mcp oracle mcp``).
+Run as a stdio MCP server: ``eyewright mcp`` (needs the ``mcp`` extra:
+``uv run --extra mcp eyewright mcp``).
 """
 
 from mcp.server.mcpserver import MCPServer
@@ -15,11 +15,11 @@ from .gate import decide_gate
 
 
 def build(cfg):
-    mcp = MCPServer("oracle")
+    mcp = MCPServer("eyewright")
 
     @mcp.tool()
-    def oracle_gate(state: str, question: str) -> dict:
-        """Gate a claim against the Oracle committee.
+    def eyewright_gate(state: str, question: str) -> dict:
+        """Gate a claim against the eyewright committee.
 
         Returns p_done, the policy decision (accept / consensus-* / review-*),
         and the full consult trace.
@@ -28,8 +28,8 @@ def build(cfg):
         return {"p_done": round(p, 4), "decision": trace.get("decision"), "trace": trace}
 
     @mcp.tool()
-    def oracle_ask(state: str, question: str, choices: dict | None = None, engine: str | None = None) -> dict:
-        """Ask the Oracle a typed decision.
+    def eyewright_ask(state: str, question: str, choices: dict | None = None, engine: str | None = None) -> dict:
+        """Ask eyewright a typed decision.
 
         With `choices` (option -> description) it picks an option; without, it is a
         yes/no judgment. `engine`: None/typed (decision models), "generative" (local

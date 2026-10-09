@@ -34,7 +34,7 @@ fast comparisons — label results *exploratory*.
 5. **Mixed confidence kinds.** Decision models emit posteriors; generative
    candidates (gemma, Jev-over-API, Jevify) emit **self-reported** confidence.
    Thresholding both at 0.75/0.9 compares different objects until the generative
-   side is calibrated (tagged `"calibrated": false` in `oracle.ask`).
+   side is calibrated (tagged `"calibrated": false` in `eyewright.ask`).
 6. **Prompt / API drift.** LLM candidates are prompt-sensitive; OpenRouter models
    change under the same id (`typesafe/jev-router` even routes to varying upstream
    models, dynamic pricing). No paraphrase ablation, seeds, or version pinning.
