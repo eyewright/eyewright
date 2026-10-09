@@ -26,6 +26,7 @@ DEFAULTS = {
 
 ap = argparse.ArgumentParser()
 ap.add_argument("--extra", action="append", default=[], metavar="name=path")
+ap.add_argument("--cases", default="cases.jsonl")
 ap.add_argument("--out", default=None)
 args = ap.parse_args()
 
@@ -36,7 +37,7 @@ for item in args.extra:
     FILES[name] = path
     EXTRA.append(name)
 
-cases = {json.loads(l)["id"]: json.loads(l) for l in open("cases.jsonl", encoding="utf-8")}
+cases = {json.loads(l)["id"]: json.loads(l) for l in open(args.cases, encoding="utf-8")}
 rows = [(cid, q, str(gold.get("label")).lower() == "true")
         for cid, c in cases.items() for q, gold in c["gold"].items()
         if gold.get("type") == "noul"]

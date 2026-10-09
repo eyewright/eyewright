@@ -11,6 +11,38 @@ decision models behind one callable: used at the *decide* step of
   agreeing → consensus; one confident + another within 0.05 of main →
   review-conflict → the caller gathers more evidence.
 
+## Local-first, with an optional upgrade
+
+The default gate is **fully local** — Ollama (`gemma4:12b`, `tev1:4b`) plus a local
+Laya checkpoint. No prompts leave the machine; the numbers below are from the same
+600-noul gate proxy used to pick the local committee.
+
+Individual eyes can optionally be upgraded to a **cloud model with ZDR routing**:
+`typesafe/jev-1.13` (Typesafe's System One decision model) is reachable through
+OpenRouter's native decisions API and plugs in as a drop-in consult
+(`"type": "openrouter-decisions"`, `"zdr": true`, key from `OPENROUTER_API_KEY`) —
+see `examples/gate-jev.json`.
+
+Screening numbers (main = `laya-typed-decisions`; `bench/SCREENING-2026-10-09.md`;
+screening, not confirmatory — see `bench/RIGOR.md`):
+
+| gate | acted % | acted accuracy | network |
+|---|---|---|---|
+| local default: `tev1:4b + laya-multilingual` | 23.7% | 90.8% | none |
+| local System-2 add: `tev1:4b + gemma4:12b` | 34.3% | 94.7% | none |
+| cloud consult (precision): `tev1:4b + jev-1.13` | 10.0% | 100% | ZDR |
+| cloud main (automation): `jev-1.13 + tev1:4b + laya-multilingual` | 32.5% | 91.3% | ZDR |
+
+ZDR here is **request-level routing** (`provider.zdr`), not a cryptographic
+guarantee: it keeps prompts away from providers that retain data, but only
+self-hosting is independently verifiable. That trade — more automation at the cost
+of "nothing leaves the box" — is the point of making it a switch.
+
+```powershell
+$env:OPENROUTER_API_KEY = "<key>"
+uv run oracle gate --config examples/gate-jev.json --state "..." --question "Is the task complete?"
+```
+
 ## Four ways to call it
 
 **Python**
