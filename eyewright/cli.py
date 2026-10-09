@@ -2,6 +2,7 @@
 
 import argparse
 import json
+import subprocess
 import sys
 from pathlib import Path
 
@@ -13,6 +14,18 @@ def _load_cfg(path):
     return json.loads(Path(path).read_text(encoding="utf-8"))
 
 
+def _start_services():
+    """Best-effort: run the supervisor once so local services are up before gating."""
+    script = Path(__file__).resolve().parents[1] / "supervisor" / "svcwatch.py"
+    if not script.exists():
+        print(f"[eyewright] supervisor not found at {script}", file=sys.stderr)
+        return
+    try:
+        subprocess.run([sys.executable, str(script), "--once"], timeout=180, check=False)
+    except Exception as e:
+        print(f"[eyewright] start-services failed: {e}", file=sys.stderr)
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(prog="eyewright", description="eyewright - local decision core")
     sub = ap.add_subparsers(dest="cmd", required=True)
@@ -21,6 +34,8 @@ def main(argv=None):
     g.add_argument("--state", required=True)
     g.add_argument("--question", required=True)
     g.add_argument("--config", default="examples/gate.json")
+    g.add_argument("--start-services", action="store_true",
+                   help="run the supervisor once (start any down local services) before gating")
 
     a = sub.add_parser("ask", help="typed decision (yes/no, choice, or scale)")
     a.add_argument("--state", required=True)
@@ -38,9 +53,14 @@ def main(argv=None):
 
     m = sub.add_parser("mcp", help="MCP stdio server (needs the mcp extra)")
     m.add_argument("--config", default="examples/gate.json")
+    m.add_argument("--start-services", action="store_true",
+                   help="run the supervisor once before serving")
 
     args = ap.parse_args(argv)
     cfg = _load_cfg(args.config)
+
+    if getattr(args, "start_services", False):
+        _start_services()
 
     if args.cmd == "gate":
         p, trace = decide_gate(cfg, args.state, args.question)

@@ -10,11 +10,43 @@ gate config (primary + consults); see examples/gate.json.
 """
 
 import json
+import urllib.request
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 from . import __version__
 from .decide import ask
 from .gate import decide_gate
+
+
+def _dependency_checks(cfg):
+    """Health URLs for the configured eyes (deduped by label)."""
+    checks = {}
+    for e in [cfg.get("primary") or {}] + list(cfg.get("consults") or []):
+        name = e.get("name") or e.get("model") or e.get("type") or "eye"
+        t = e.get("type")
+        if t == "systemone-http" and e.get("url"):
+            root = e["url"].split("/v1/")[0]
+            checks[f"{name}"] = root + "/health"
+        elif t == "systemone-ollama":
+            checks[f"{name} (ollama)"] = "http://localhost:11434/api/tags"
+        elif t == "openrouter-decisions":
+            checks[f"{name} (openrouter)"] = "https://openrouter.ai/api/v1/models"
+    return checks
+
+
+def deep_health(cfg):
+    deps = {}
+    ok = True
+    for name, url in _dependency_checks(cfg).items():
+        try:
+            with urllib.request.urlopen(url, timeout=3) as r:
+                up = 200 <= r.status < 400
+        except Exception:
+            up = False
+        deps[name] = {"url": url, "ok": up}
+        ok = ok and up
+    return {"status": "ok" if ok else "degraded", "service": "eyewright",
+            "version": __version__, "dependencies": deps}
 
 
 def make_handler(cfg):
@@ -30,7 +62,12 @@ def make_handler(cfg):
             self.wfile.write(body)
 
         def do_GET(self):
-            if self.path in ("/health", "/"):
+            if self.path.startswith("/health"):
+                if "deep=1" in self.path or self.path.startswith("/health/deep"):
+                    self._send(200, deep_health(cfg))
+                else:
+                    self._send(200, {"status": "ok", "service": "eyewright", "version": __version__})
+            elif self.path == "/":
                 self._send(200, {"status": "ok", "service": "eyewright", "version": __version__})
             else:
                 self._send(404, {"error": "not found"})
