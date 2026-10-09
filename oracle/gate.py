@@ -17,6 +17,7 @@ review-conflict | review-weak | review-no-signal | none. Returns (p_done, trace)
 """
 
 import json
+import os
 import urllib.request
 from pathlib import Path
 
@@ -66,6 +67,32 @@ def systemone_http(url, key, state, question, model=None):
     return float(resp["answers"]["done"]["noul"])
 
 
+def openrouter_decisions(entry, state, question):
+    """Native decisions API (Typesafe Jev on OpenRouter).
+
+    Same `state`/`questions` shape as systemone, so Jev plugs into the committee
+    as a drop-in eye. Set ``"zdr": true`` on the entry to route only to
+    zero-data-retention providers; the API key comes from the environment
+    (``key_env``, default ``OPENROUTER_API_KEY``).
+    """
+    url = entry.get("url") or "https://openrouter.ai/api/alpha/decisions"
+    payload = {
+        "model": entry["model"],
+        "state": state,
+        "questions": {"done": {"type": "noul", "instructions": question}},
+    }
+    if entry.get("zdr"):
+        payload["provider"] = {"zdr": True}
+    headers = {"Content-Type": "application/json"}
+    key = os.environ.get(entry.get("key_env") or "OPENROUTER_API_KEY", "")
+    if key:
+        headers["Authorization"] = "Bearer " + key
+    req = urllib.request.Request(url, data=json.dumps(payload).encode(), headers=headers)
+    with urllib.request.urlopen(req, timeout=180) as r:
+        resp = json.loads(r.read().decode())
+    return float((resp.get("answers") or {}).get("done", {}).get("noul"))
+
+
 def decide_gate(cfg, state, question):
     """Three-eye gate. Primary first; in the uncertain band, consult the others.
     Trust a consensus of >=2 confident consults; otherwise review (retry/gather evidence).
@@ -86,6 +113,8 @@ def decide_gate(cfg, state, question):
             return systemone_http(entry["url"], key, state, question, entry.get("model"))
         if t == "systemone-ollama":
             return systemone_ollama(entry, state, question)
+        if t == "openrouter-decisions":
+            return openrouter_decisions(entry, state, question)
         raise ValueError("unknown consult type")
 
     p1 = None
