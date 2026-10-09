@@ -1,12 +1,12 @@
 """Score the screening roster on the 600-noul gate proxy (same policy as THREE-EYE).
 
-Solo stats + gate table (main / two consults) exactly like the original
-Oracle-vs-laya comparison, plus bootstrap CIs. Generative candidates are
-labelled: their confidences are SELF-REPORTED (uncalibrated).
+Solo stats + gate table (main / N consults), plus bootstrap CIs, exactly like the
+original Oracle-vs-laya comparison. Generative candidates are labelled: their
+confidences are SELF-REPORTED (uncalibrated).
 
     uv run python compare_consults.py \
+        --extra "jev-1.13=responses-jev-113.jsonl" \
         --extra "jev-router=responses-jev-router.jsonl" \
-        --extra "jevify-gemma=responses-jevify-gemma.jsonl" \
         --extra "gemma4:12b=responses-gemma12b.jsonl" \
         --out SCREENING-2026-10-09.md
 """
@@ -30,9 +30,11 @@ ap.add_argument("--out", default=None)
 args = ap.parse_args()
 
 FILES = dict(DEFAULTS)
+EXTRA = []
 for item in args.extra:
     name, _, path = item.partition("=")
     FILES[name] = path
+    EXTRA.append(name)
 
 cases = {json.loads(l)["id"]: json.loads(l) for l in open("cases.jsonl", encoding="utf-8")}
 rows = [(cid, q, str(gold.get("label")).lower() == "true")
@@ -95,8 +97,8 @@ def solo(m):
             "ece": round(ece, 4) if ece is not None else None}
 
 
-def classify(main, c1, c2):
-    """Per-row outcome of the three-eye policy for (main, consult1, consult2)."""
+def classify(main, consults):
+    """Per-row outcome of the gate policy for (main, [consults...])."""
     out = []
     for cid, q, gl in rows:
         p1 = noul_p(main, cid, q)
@@ -106,14 +108,18 @@ def classify(main, c1, c2):
         if p1 >= ACCEPT:
             rec.update(acted=True, correct=gl)
         elif p1 > 1 - ACCEPT:
-            p2, p3 = noul_p(c1, cid, q), noul_p(c2, cid, q)
-            conf = [p for p in (p2, p3) if p is not None and max(p, 1 - p) >= HIGH]
-            if len(conf) >= 2 and len({p >= 0.5 for p in conf}) == 1:
-                dir_true = conf[0] >= 0.5
-                rec.update(acted=True, correct=(gl if dir_true else not gl), cons=True)
-            elif len(conf) == 1 and p2 is not None and p3 is not None:
-                other = p3 if conf[0] == p2 else p2
-                rec["conflict"] = abs(other - p1) <= DELTA
+            ps = [(n, noul_p(n, cid, q)) for n in consults]
+            conf = [(n, p) for n, p in ps if p is not None and max(p, 1 - p) >= HIGH]
+            if len(conf) >= 2:
+                dirs = {p >= 0.5 for _, p in conf}
+                if len(dirs) == 1:
+                    avg = sum(p for _, p in conf) / len(conf)
+                    rec.update(acted=True, correct=(gl if avg >= 0.5 else not gl), cons=True)
+                else:
+                    rec["conflict"] = True
+            elif len(conf) == 1:
+                others = [p for n, p in ps if n != conf[0][0] and p is not None]
+                rec["conflict"] = any(abs(p - p1) <= DELTA for p in others)
         out.append(rec)
     return out
 
@@ -149,17 +155,33 @@ def fmt_pct(x):
     return "-" if x is None else f"{x*100:.1f}%"
 
 
+def build_configs():
+    configs = [("incumbent: laya / tev1 + laya-ml", MAIN, ["tev1:4b", "laya-multilingual"])]
+    for x in EXTRA:
+        configs.append((f"laya / tev1 + {x}", MAIN, ["tev1:4b", x]))
+    configs += [
+        ("TRIPLE laya / tev1 + jev-1.13 + gemma4:12b", MAIN, ["tev1:4b", "jev-1.13", "gemma4:12b"]),
+        ("TRIPLE laya / tev1 + jev-router + gemma4:12b", MAIN, ["tev1:4b", "jev-router", "gemma4:12b"]),
+        ("laya / jev-1.13 + gemma4:12b (no tev1)", MAIN, ["jev-1.13", "gemma4:12b"]),
+    ]
+    for x in EXTRA:
+        configs.append((f"{x} main / tev1 + laya-ml", x, ["tev1:4b", "laya-multilingual"]))
+    configs.append(("reference: laya / tev1 + von", MAIN, ["tev1:4b", "von (retired)"]))
+    return configs
+
+
 def main():
     lines = []
-    lines.append("# Screening run: Jev / Gemma / Jevify on the 600-noul gate proxy (2026-10-09)")
+    lines.append("# Screening run: Jev / Gemma / Jevify vs the Oracle on the 600-noul gate proxy (2026-10-09)")
     lines.append("")
     lines.append("Same rows and policy as the original Oracle-vs-laya comparison (THREE-EYE.md):")
-    lines.append("main accept >= 0.75, reject <= 0.25, uncertain band consults both; consensus = both")
-    lines.append(">= 0.9 confident and agreeing; conflict = one confident + other within 0.05 of main.")
+    lines.append("main accept >= 0.75, reject <= 0.25, uncertain band consults; consensus = >= 2")
+    lines.append("confident consults (>= 0.9) agreeing (majority for triples); conflict = one confident")
+    lines.append("+ another consult within 0.05 of main.")
     lines.append("")
     lines.append("**Screening, not confirmatory** — see `RIGOR.md`. Generative candidates' confidences")
-    lines.append("are self-reported (uncalibrated); `typesafe/jev-router` answers are routed to upstream")
-    lines.append("models (recorded per call).")
+    lines.append("are self-reported (uncalibrated); `jev-router` answers are routed to upstream models;")
+    lines.append("`jev-1.13` is called through the native OpenRouter decisions API (`--zdr`).")
     lines.append("")
 
     lines.append("## Solo stats (600 noul decisions)")
@@ -173,26 +195,17 @@ def main():
         tag = "" if name in DEFAULTS else " *"
         lines.append(f"| {name}{tag} | {s['n']} | {s['acc']} | {s['pct090']} | {s['brier']} | {s['ece']} |")
     lines.append("")
-    lines.append("\\* generative candidate: confidence is the model's own estimate, not a calibrated posterior.")
+    lines.append("\\* generative candidate (or native decisions API): confidence is the model's own, not a calibrated posterior.")
     lines.append("")
-
-    configs = [("incumbent: laya / tev1 + laya-ml", MAIN, "tev1:4b", "laya-multilingual")]
-    for name in FILES:
-        if name in tables and name not in DEFAULTS and name != MAIN:
-            configs.append((f"laya / tev1 + {name}", MAIN, "tev1:4b", name))
-    for name in FILES:
-        if name in tables and name not in DEFAULTS and name != MAIN:
-            configs.append((f"{name} main / tev1 + laya-ml", name, "tev1:4b", "laya-multilingual"))
-    configs.append(("reference: laya / tev1 + von", MAIN, "tev1:4b", "von (retired)"))
 
     lines.append("## Gate table (same policy)")
     lines.append("")
-    lines.append("| config | acted n | acted % (95% CI) | acted acc (95% CI) | consensus n/acc | conflict | review |")
+    lines.append("| config | acted n | acted % (95% CI) | acted acc (95% CI) | consensus n/acc | conflict | not-acted\\* |")
     lines.append("|---|---|---|---|---|---|---|")
-    for label, m, c1, c2 in configs:
-        if m not in tables or c1 not in tables or c2 not in tables:
+    for label, m, consults in build_configs():
+        if m not in tables or any(c not in tables for c in consults):
             continue
-        o = classify(m, c1, c2)
+        o = classify(m, consults)
         s = summarize(o)
         pct_ci = ci(o, "acted_pct")
         acc_ci = ci(o, "acted_acc")
@@ -203,9 +216,10 @@ def main():
             f"| {s['conflict']} | {s['review']} |"
         )
     lines.append("")
+    lines.append("\\* not-acted = main-rejects (p <= 0.25) + review paths (conflicts counted separately).")
+    lines.append("")
 
-    # upstream models seen by the router
-    try:
+    if "jev-router" in tables:
         seen = {}
         for line in open("responses-jev-router.jsonl", encoding="utf-8"):
             r = json.loads(line)
@@ -213,14 +227,11 @@ def main():
                 um = a.get("upstream_model")
                 if um:
                     seen[um] = seen.get(um, 0) + 1
-        if seen:
-            lines.append("## jev-router upstream models (what it routed to)")
-            lines.append("")
-            for k, v in sorted(seen.items(), key=lambda kv: -kv[1]):
-                lines.append(f"- {k}: {v} calls")
-            lines.append("")
-    except FileNotFoundError:
-        pass
+        lines.append("## jev-router upstream models (what it routed to)")
+        lines.append("")
+        for k, v in sorted(seen.items(), key=lambda kv: -kv[1]):
+            lines.append(f"- {k}: {v} calls")
+        lines.append("")
 
     text = "\n".join(lines)
     print(text)
