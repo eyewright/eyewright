@@ -1,0 +1,24 @@
+{
+  "poll_seconds": 15,
+  "services": {
+    "laya-serve": {
+      "enabled": true,
+      "cmd": ["uv", "run", "--with", "laya[serve]", "laya-serve"],
+      "cwd": "~/.config/eyewright",
+      "health": "http://127.0.0.1:8000/health",
+      "env": { "LAYA_DEFAULT_MODEL": "typed-decisions" },
+      "restart": { "backoff_s": [5, 15, 60, 300], "startup_grace_s": 60 },
+      "log": "laya-serve.log",
+      "note": "LAYA_DEFAULT_MODEL pins the served default to the specialist checkpoint (the package default is 'english')."
+    },
+    "ollama": {
+      "enabled": false,
+      "cmd": ["ollama", "serve"],
+      "cwd": "C:/Users/<user>",
+      "health": "http://127.0.0.1:11434/api/tags",
+      "restart": { "backoff_s": [5, 15, 60] },
+      "log": "ollama.log",
+      "note": "Usually already running via the Ollama desktop app. Enable only for a headless/supervised box."
+    }
+  }
+}

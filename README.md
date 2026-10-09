@@ -147,6 +147,20 @@ von is retired from the consult roster (2026-10-06). See `docs/THREE-EYE.md`.
 > entry that omits `"model"` silently uses the wrong main eye (measured on the noul
 > proxy: 0.44 vs 0.86 accuracy). Always pin `"model": "typed-decisions"`.
 
+## Resilience
+
+- **Supervisor** (`supervisor/`): `services.json` + `svcwatch.py` keep local
+  services alive (health probe, detached restart with backoff, logs, single
+  instance). `laya-serve`'s descriptor pins `LAYA_DEFAULT_MODEL=typed-decisions`.
+  Autostart at logon: `pwsh -File supervisor/install.ps1`. The descriptor is
+  generic — an agent control plane's Model Router can adopt it.
+- **Caller**: `decide_gate` retries the primary (`retries`, `retry_backoff_s`) and
+  applies `on_primary_unavailable`: `fallback` (default) / `review` / `error`.
+  The trace always records `policy` and `primary_error`, so degradation is never
+  silent. `eyewright gate --start-services` runs the supervisor once first.
+- **Deep health**: `GET /health/deep` (or `/health?deep=1`) reports per-dependency
+  reachability (laya-serve, ollama, openrouter).
+
 ## Roadmap
 
 1. ✅ `eyewright ask` (package + CLI) and `eyewright serve` (HTTP).

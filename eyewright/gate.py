@@ -18,6 +18,7 @@ review-conflict | review-weak | review-no-signal | none. Returns (p_done, trace)
 
 import json
 import os
+import time
 import urllib.request
 from pathlib import Path
 
@@ -97,14 +98,25 @@ def decide_gate(cfg, state, question):
     """Three-eye gate. Primary first; in the uncertain band, consult the others.
     Trust a consensus of >=2 confident consults; otherwise review (retry/gather evidence).
 
+    Resilience (config):
+      - ``retries`` (default 1) + ``retry_backoff_s`` (default 1.0) — attempts on an
+        eye before it is considered unavailable.
+      - ``on_primary_unavailable`` — ``fallback`` (default: use consults[0] as the
+        stand-in main), ``review`` (never substitute silently; the caller reviews),
+        ``error`` (raise). The trace records ``policy`` and any ``primary_error``.
+
     Decisions: accept | consensus | review-low | review-conflict | review-weak |
-    review-no-signal | none. Returns (p_done, trace).
+    review-no-signal | review-primary-unavailable | error-primary | none.
+    Returns (p_done, trace).
     """
     accept = float(cfg.get("accept_threshold", 0.75))
     consult = float(cfg.get("consult_threshold", 0.55))
     high = float(cfg.get("high_confidence", 0.9))
     delta = float(cfg.get("match_delta", 0.05))
-    trace = {"consults": {}}
+    policy = str(cfg.get("on_primary_unavailable", "fallback")).lower()
+    attempts = max(1, int(cfg.get("retries", 1)))
+    backoff = float(cfg.get("retry_backoff_s", 1.0))
+    trace = {"consults": {}, "policy": policy}
 
     def ask(entry):
         t = entry.get("type")
@@ -117,16 +129,33 @@ def decide_gate(cfg, state, question):
             return openrouter_decisions(entry, state, question)
         raise ValueError("unknown consult type")
 
+    def ask_retry(entry):
+        last = None
+        for i in range(attempts):
+            try:
+                return ask(entry)
+            except Exception as e:
+                last = e
+                if i + 1 < attempts:
+                    time.sleep(backoff * (2 ** i))
+        raise last
+
     p1 = None
     try:
-        p1 = ask(cfg.get("primary") or {})
+        p1 = ask_retry(cfg.get("primary") or {})
     except Exception as e:
         trace["primary_error"] = str(e)[:140]
     if p1 is None:
-        cons = cfg.get("consults") or []
+        if policy == "error":
+            trace["decision"] = "error-primary"
+            raise RuntimeError("primary unavailable: " + str(trace.get("primary_error")))
+        if policy == "review":
+            trace["decision"] = "review-primary-unavailable"
+            return 0.0, trace
+        cons = cfg.get("consults") or []          # fallback (default)
         if cons:
             try:
-                p1 = ask(cons[0])
+                p1 = ask_retry(cons[0])
                 trace["primary_source"] = cons[0].get("name", "consult0")
             except Exception as e:
                 trace["primary_error2"] = str(e)[:140]
