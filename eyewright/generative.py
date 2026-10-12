@@ -20,9 +20,10 @@ Engine config (inside the gate config):
 import json
 
 from .decide import _post_json
+from .gate import DEFAULT_TIMEOUT_S
 
 
-def _ollama_chat(model, messages, options=None, fmt="json", think=None, timeout=1800):
+def _ollama_chat(model, messages, options=None, fmt="json", think=None, timeout=DEFAULT_TIMEOUT_S):
     payload = {
         "model": model,
         "messages": messages,
@@ -123,6 +124,7 @@ def ask_generative(cfg, state, question, choices=None, levels=None, kind=None):
         options=g.get("options"),
         fmt=g.get("format", "json"),
         think=g.get("think"),
+        timeout=float(g.get("timeout_s", cfg.get("timeout_s", DEFAULT_TIMEOUT_S))),
     )
     obj = _extract_json(content) or {}
     answer = obj.get("answer")

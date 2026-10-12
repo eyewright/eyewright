@@ -16,17 +16,20 @@ serve`` exposes it over HTTP and ``eyewright mcp`` exposes it as MCP tools.
 import json
 import urllib.request
 
-from .gate import decide_gate, load_key
+from .gate import DEFAULT_TIMEOUT_S, decide_gate, load_key
+
+# decisions that mean the typed path produced no usable signal: `auto` may fall back
+_NO_TYPED_SIGNAL = frozenset({"none", "review-primary-unavailable", "error-primary"})
 
 
-def _post_json(url, payload, timeout=1800):
+def _post_json(url, payload, timeout=DEFAULT_TIMEOUT_S):
     data = json.dumps(payload).encode()
     req = urllib.request.Request(url, data=data, headers={"Content-Type": "application/json"})
     with urllib.request.urlopen(req, timeout=timeout) as r:
         return json.loads(r.read().decode())
 
 
-def call_engine(entry, state, questions):
+def call_engine(entry, state, questions, timeout=DEFAULT_TIMEOUT_S):
     """One systemone call against a configured engine (an `entry` from the gate config)."""
     t = entry.get("type")
     if t == "systemone-http":
@@ -40,11 +43,11 @@ def call_engine(entry, state, questions):
         key = load_key(entry.get("key_file") or "")
         if key:
             req.add_header("Authorization", "Bearer " + key)
-        with urllib.request.urlopen(req, timeout=1800) as r:
+        with urllib.request.urlopen(req, timeout=timeout) as r:
             return json.loads(r.read().decode())
     if t == "systemone-ollama":
         payload = {"model": entry["model"], "state": state, "questions": questions}
-        return _post_json("http://localhost:11434/v1/systemone", payload)
+        return _post_json("http://localhost:11434/v1/systemone", payload, timeout=timeout)
     raise ValueError(f"unknown engine type {t!r}")
 
 
@@ -75,8 +78,19 @@ def ask(cfg, state, question, choices=None, levels=None, engine=None, qid="q"):
 
         return ask_generative(cfg, state, question, choices=choices, levels=levels, kind=kind)
 
+    timeout = float(cfg.get("timeout_s", DEFAULT_TIMEOUT_S))
     if kind == "noul":
-        p, trace = decide_gate(cfg, state, question)
+        try:
+            p, trace = decide_gate(cfg, state, question)
+        except Exception as e:  # e.g. on_primary_unavailable = "error"
+            if engine == "auto" and cfg.get("generative"):
+                from .generative import ask_generative
+
+                fb = ask_generative(cfg, state, question, choices=choices, levels=levels, kind=kind)
+                fb["fallback"] = "typed->generative"
+                fb["typed_error"] = str(e)[:140]
+                return fb
+            raise
         out = {
             "kind": "noul",
             "answer": "yes" if p >= 0.5 else "no",
@@ -84,7 +98,7 @@ def ask(cfg, state, question, choices=None, levels=None, engine=None, qid="q"):
             "p_true": round(p, 4),
             "trace": trace,
         }
-        if engine == "auto" and trace.get("decision") == "none" and cfg.get("generative"):
+        if engine == "auto" and trace.get("decision") in _NO_TYPED_SIGNAL and cfg.get("generative"):
             from .generative import ask_generative
 
             fb = ask_generative(cfg, state, question, choices=choices, levels=levels, kind=kind)
@@ -96,7 +110,7 @@ def ask(cfg, state, question, choices=None, levels=None, engine=None, qid="q"):
     if not entry:
         raise ValueError("config has no primary engine")
     try:
-        resp = call_engine(entry, state, questions)
+        resp = call_engine(entry, state, questions, timeout)
     except Exception as e:
         if engine == "auto" and cfg.get("generative"):
             from .generative import ask_generative
