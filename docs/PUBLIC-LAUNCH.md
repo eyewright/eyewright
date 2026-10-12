@@ -4,20 +4,24 @@ Gate to flip `eyewright/eyewright` from **private → public**. Repo is private 
 2026-10-12 by decision; nothing below is done unless checked. Work top to bottom.
 
 ## 0. Decide
-- [ ] **License** (blocks everything): **Apache-2.0 + `NOTICE`** (explicit patent
-      grant; keeps attribution in redistributions) vs **MIT** (shortest, no patent
-      clause). Owner decision — see the ADR-0005 Open list.
+- [x] **License:** **Apache-2.0 + `NOTICE` + DCO** (decided 2026-10-12). Wired:
+      `LICENSE`, `NOTICE`, `DCO`, `CONTRIBUTING.md`, `AUTHORS`, `PROVENANCE.md`,
+      and the `pyproject.toml` metadata.
 - [ ] **What ships:** keep `bench/*.jsonl` research data in the public repo, or
       strip to code + docs? (Already excluded from the sdist; still in git.)
 - [ ] **Family shape:** is `eyewright` only the gate, or the house name? Affects the
       README framing and the GitHub org description.
 
 ## 1. Legal / provenance
-- [ ] add `LICENSE` at repo root (+ `NOTICE` if Apache-2.0)
-- [ ] `pyproject.toml`: `license`, `license-files`, `[project.urls]`
-- [ ] `publish/npm/package.json`: confirm `license`
-- [ ] `AUTHORS` + `PROVENANCE.md` (origin: model-lab decision-bench 2026-10-06 →
+- [x] `LICENSE` (Apache-2.0) + `NOTICE` at repo root
+- [x] `pyproject.toml`: `license = "Apache-2.0"`, `license-files`, `[project.urls]`,
+      classifiers (build verified: PEP 639 `License-Expression`)
+- [x] `AUTHORS` + `PROVENANCE.md` (model-lab decision-bench 2026-10-06 →
       `oracle` repo 2026-10-08 → `eyewright` rename 2026-10-09)
+- [x] `DCO` + `CONTRIBUTING.md` (commits require `git commit -s` sign-off)
+- [ ] `publish/npm/package.json`: already `Apache-2.0` — confirm at publish time
+- [ ] PyPI metadata carries no license (0.3.1 predates this): ship the license on
+      the next version bump (`uv version --bump patch` → publish)
 
 ## 2. Secret / sensitive scan (full git history, not just HEAD)
 - [ ] scan history for keys/tokens (`pypi-AgEI`, `npm_`, `sk-`, `gho_`, `-----BEGIN`)
