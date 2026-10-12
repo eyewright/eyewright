@@ -1,21 +1,35 @@
 """eyewright serve - one local HTTP endpoint for decisions.
 
 Endpoints:
-  GET  /health
-  POST /v1/gate   {"state": str, "question": str}                    -> {p_done, decision, trace}
-  POST /v1/ask    {"state": str, "question": str, "choices"?: {...}} -> answer dict
+  GET  /health       liveness (always open)
+  GET  /health/deep  dependency readiness (needs auth when a token is set)
+  POST /v1/gate      {"state": str, "question": str}                    -> {p_done, decision, trace}
+  POST /v1/ask       {"state": str, "question": str, "choices"?: {...}} -> answer dict
 
-Loopback-only by default (no auth on 127.0.0.1). Config is a JSON file with the
-gate config (primary + consults); see examples/gate.json.
+Loopback-only by default. Binding off-loopback **requires** a bearer token
+(``--token`` / ``$EYEWRIGHT_TOKEN``); requests must then send
+``Authorization: Bearer <token>``. Request bodies are capped. Transport is plain
+HTTP: off-loopback, put a TLS terminator or a tunnel in front -- the token is
+authentication, not encryption.
 """
 
+import hmac
 import json
+import os
+import sys
 import urllib.request
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 from . import __version__
 from .decide import ask
 from .gate import decide_gate
+
+LOOPBACK = {"127.0.0.1", "::1", "localhost"}
+DEFAULT_MAX_BODY = 1_000_000  # 1 MB
+
+
+def _is_loopback(host):
+    return host in LOOPBACK
 
 
 def _dependency_checks(cfg):
@@ -49,7 +63,7 @@ def deep_health(cfg):
             "version": __version__, "dependencies": deps}
 
 
-def make_handler(cfg):
+def make_handler(cfg, token=None, max_body=DEFAULT_MAX_BODY):
     class Handler(BaseHTTPRequestHandler):
         server_version = f"eyewright/{__version__}"
 
@@ -61,9 +75,19 @@ def make_handler(cfg):
             self.end_headers()
             self.wfile.write(body)
 
+        def _authorized(self):
+            if not token:
+                return True
+            header = self.headers.get("Authorization", "")
+            return hmac.compare_digest(header, "Bearer " + token)
+
         def do_GET(self):
+            deep = "deep" in self.path
+            if deep and not self._authorized():
+                self._send(401, {"error": "unauthorized"})
+                return
             if self.path.startswith("/health"):
-                if "deep=1" in self.path or self.path.startswith("/health/deep"):
+                if deep:
                     self._send(200, deep_health(cfg))
                 else:
                     self._send(200, {"status": "ok", "service": "eyewright", "version": __version__})
@@ -73,11 +97,30 @@ def make_handler(cfg):
                 self._send(404, {"error": "not found"})
 
         def do_POST(self):
+            if not self._authorized():
+                self._send(401, {"error": "unauthorized"})
+                return
             try:
                 n = int(self.headers.get("Content-Length") or 0)
-                body = json.loads(self.rfile.read(n).decode() or "{}")
-            except Exception as e:
-                self._send(400, {"error": f"bad json: {e}"})
+            except ValueError:
+                self._send(400, {"error": "bad content-length"})
+                return
+            if n < 0 or n > max_body:
+                # drain a bounded amount so the client can read our 413 cleanly,
+                # without ever holding the (oversize) body in memory
+                remaining = min(n, 8 * 1024 * 1024) if n > 0 else 0
+                while remaining > 0:
+                    chunk = self.rfile.read(min(65536, remaining))
+                    if not chunk:
+                        break
+                    remaining -= len(chunk)
+                self._send(413, {"error": f"body too large (max {max_body} bytes)"})
+                return
+            try:
+                raw = self.rfile.read(n) if n else b""
+                body = json.loads(raw.decode() or "{}")
+            except Exception:
+                self._send(400, {"error": "invalid json"})
                 return
             try:
                 if self.path == "/v1/gate":
@@ -91,7 +134,8 @@ def make_handler(cfg):
                 else:
                     self._send(404, {"error": "not found"})
             except Exception as e:
-                self._send(500, {"error": str(e)[:300]})
+                print(f"[eyewright] error handling {self.path}: {e}", file=sys.stderr)
+                self._send(500, {"error": "internal error"})
 
         def log_message(self, fmt, *args):
             print("[eyewright] " + fmt % args)
@@ -99,7 +143,13 @@ def make_handler(cfg):
     return Handler
 
 
-def serve(cfg, host="127.0.0.1", port=8090):
-    httpd = ThreadingHTTPServer((host, port), make_handler(cfg))
-    print(f"eyewright serving on http://{host}:{port}  (gate: /v1/gate, ask: /v1/ask)")
+def serve(cfg, host="127.0.0.1", port=8090, token=None, max_body=DEFAULT_MAX_BODY):
+    token = token or os.environ.get("EYEWRIGHT_TOKEN")
+    if not _is_loopback(host) and not token:
+        raise SystemExit(
+            f"refusing to bind {host} without a bearer token; pass --token or set EYEWRIGHT_TOKEN"
+        )
+    httpd = ThreadingHTTPServer((host, port), make_handler(cfg, token=token, max_body=max_body))
+    note = "  (token required)" if token else ""
+    print(f"eyewright serving on http://{host}:{port}{note}  (gate: /v1/gate, ask: /v1/ask)")
     httpd.serve_forever()

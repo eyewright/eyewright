@@ -49,6 +49,9 @@ def main(argv=None):
     s = sub.add_parser("serve", help="HTTP service (/v1/gate, /v1/ask)")
     s.add_argument("--host", default="127.0.0.1")
     s.add_argument("--port", type=int, default=8090)
+    s.add_argument("--token", help="bearer token for requests (default: $EYEWRIGHT_TOKEN); "
+                                   "required when binding off-loopback")
+    s.add_argument("--max-body", type=int, default=1000000, help="max request body bytes")
     s.add_argument("--config", default="examples/gate.json")
 
     m = sub.add_parser("mcp", help="MCP stdio server (needs the mcp extra)")
@@ -75,7 +78,7 @@ def main(argv=None):
     if args.cmd == "serve":
         from .server import serve
 
-        serve(cfg, args.host, args.port)
+        serve(cfg, args.host, args.port, token=args.token, max_body=args.max_body)
         return 0
     if args.cmd == "mcp":
         from .mcp_server import run
