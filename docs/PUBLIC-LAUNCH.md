@@ -63,11 +63,11 @@ New `security` label; issues #12–#17:
 - #16 serve concurrency cap / rate limit
 - #17 local-exec trust (svcwatch / `--start-services`)
 
-**Merged:** PR #11 (#1, #7) · PR #18 (#2, #3, #12) · PR #19 (#10, #14, #17).
+**Merged:** PR #11 (#1, #7) · PR #18 (#2, #3, #12) · PR #19 (#10, #14, #17) ·
+PR #20 (#4, #5, #6).
 
-**Open:** #4 `engine=auto` fallback · #5 `retries` semantics · #6 timeouts ·
-#8 MCP `levels` · #9 CI · #13 config `key_file`/`url` hardening · #15 pin `mcp` ·
-#16 rate limit.
+**Open:** #8 MCP `levels` · #9 CI · #13 config `key_file`/`url` hardening ·
+#15 pin `mcp` · #16 rate limit.
 
 ## 4. Package metadata
 - [ ] PyPI: classifiers, keywords, `[project.urls]` (Homepage / Repository / Issues)
