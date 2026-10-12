@@ -79,7 +79,7 @@ candidate, a calibration case study, and a base for the home-grown head
 
 Operational note: the first calibrated replay was corrupted by two concurrent replays
 (duplicate watchers) interleaving appends into the same file. Calibrated outputs now write to
-`C:\Users\kcpat\ai-cache\von-calibrated\`, fsync each line, validate line-by-line after the run,
+`%USERPROFILE%\ai-cache\von-calibrated\`, fsync each line, validate line-by-line after the run,
 and land via unique-temp + atomic replace.
 
 ## Pickle note (`option_marker.pt`)

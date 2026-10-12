@@ -4,11 +4,14 @@ Output: von-labels-train.jsonl, one wire question per line:
   {"state": <state>, "instructions": <noul instructions>, "choices": {"true":..., "false":...}, "gold": "true"|"false"}
 """
 import json
+import os
 from pathlib import Path
 
 import pandas as pd
 
-SRC = Path(r"D:\datasets\typed-decisions\all\train-00000-of-00001.parquet")
+SRC = Path(
+    os.environ.get("EYEWRIGHT_DATASETS", "D:/datasets/typed-decisions")
+) / "all" / "train-00000-of-00001.parquet"
 OUT = Path(__file__).parent / "von-labels-train.jsonl"
 
 df = pd.read_parquet(SRC)

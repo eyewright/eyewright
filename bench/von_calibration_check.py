@@ -5,7 +5,9 @@ import os
 
 import ensemble as E
 
-VON_CAL = r"C:\Users\kcpat\ai-cache\von-calibrated\responses-von-calibrated.jsonl"
+VON_CAL = os.path.expanduser(
+    os.environ.get("EYEWRIGHT_VON_CAL", "~/ai-cache/von-calibrated/responses-von-calibrated.jsonl")
+)
 FILES = {
     "laya-typed-decisions": "responses-laya-laya-typed-decisions.jsonl",
     "tev1:4b": "responses-tev1_4b.jsonl",

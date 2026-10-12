@@ -4,7 +4,7 @@
     "type": "systemone-http",
     "url": "http://127.0.0.1:8000/v1/systemone",
     "model": "typed-decisions",
-    "key_file": "C:\\Users\\kcpat\\OneDrive\\Documents\\Default Project\\model-lab\\decision-bench\\.laya-api-key"
+    "key_file": "%OneDrive%/Documents/Default Project/model-lab/decision-bench/.laya-api-key"
   },
   "consults": [
     { "name": "tev1:4b", "type": "systemone-ollama", "model": "tev1:4b" },
@@ -13,7 +13,7 @@
       "type": "systemone-http",
       "url": "http://127.0.0.1:8000/v1/systemone",
       "model": "multilingual",
-      "key_file": "C:\\Users\\kcpat\\OneDrive\\Documents\\Default Project\\model-lab\\decision-bench\\.laya-api-key"
+      "key_file": "%OneDrive%/Documents/Default Project/model-lab/decision-bench/.laya-api-key"
     }
   ],
   "accept_threshold": 0.75,

@@ -64,7 +64,7 @@ def log(msg):
 
 
 def start(name, svc):
-    cwd = svc.get("cwd") or str(HERE)
+    cwd = os.path.expanduser(os.path.expandvars(svc.get("cwd") or str(HERE)))
     env = dict(os.environ)
     env.update(svc.get("env") or {})
     LOG_DIR.mkdir(parents=True, exist_ok=True)

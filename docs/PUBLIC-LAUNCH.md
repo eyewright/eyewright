@@ -57,4 +57,4 @@ Gate to flip `eyewright/eyewright` from **private → public**. Repo is private 
 - [ ] day-30 metrics decision (LAUNCH.md §9)
 
 **Pointers:** `publish/RESERVE.md` (name reservations — done) ·
-`C:\Users\kcpat\OneDrive\Documents\Default Project\oracle-mcp\LAUNCH.md`.
+`%OneDrive%/Documents/Default Project/oracle-mcp/LAUNCH.md`.

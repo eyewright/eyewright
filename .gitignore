@@ -5,4 +5,7 @@ __pycache__/
 *.key
 .env
 *.log
+
+# regenerable bench outputs (see bench/README.md)
+bench/responses-*.jsonl
 *.pid

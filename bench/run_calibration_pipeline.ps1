@@ -3,7 +3,7 @@
 $ErrorActionPreference = 'Continue'
 Set-Location $PSScriptRoot
 $log = "calibration-$(Get-Date -Format yyyy-MM-dd).log"
-$key = "C:\Users\kcpat\OneDrive\Documents\Default Project\model-lab\decision-bench\.laya-api-key"
+$key = Join-Path $env:OneDrive "Documents\Default Project\model-lab\decision-bench\.laya-api-key"
 
 function Log([string]$m) {
     $l = "{0}  {1}" -f (Get-Date -Format 'HH:mm:ss'), $m

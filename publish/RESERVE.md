@@ -32,7 +32,7 @@ The real distribution already builds: `dist/eyewright-0.3.0.tar.gz` +
 3. Publish from the repo root:
 
    ```powershell
-   cd C:\Users\kcpat\projects\eyewright
+   cd %USERPROFILE%\projects\eyewright
    uv build                                   # refresh dist/ if sources changed
    $env:UV_PUBLISH_TOKEN = "pypi-<paste-token>"
    uv publish
@@ -57,7 +57,7 @@ Placeholder package is scaffolded at `publish/npm/` (name reservation only).
 `npm` is already logged in as `kcpatt27`.
 
 ```powershell
-cd C:\Users\kcpat\projects\eyewright\publish\npm
+cd %USERPROFILE%\projects\eyewright\publish\npm
 npm whoami                        # expect: kcpatt27
 npm publish --access public       # add --otp=<6-digit> if 2FA prompts
 ```
@@ -89,7 +89,7 @@ creation is web-only:
    ```
 
 3. **Done (2026-10-12):** working directory renamed to
-   `C:\Users\kcpat\projects\eyewright`; `github` remote added; `main` pushed;
+   `%USERPROFILE%\projects\eyewright`; `github` remote added; `main` pushed;
    venv + harness configs repointed.
 
 ---

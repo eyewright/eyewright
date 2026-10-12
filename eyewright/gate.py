@@ -31,10 +31,14 @@ def _post_json(url, payload, timeout=1800):
 
 
 def load_key(path):
-    """Read an API key file; relative paths resolve against the cwd."""
+    """Read an API key file.
+
+    ``~`` and environment variables (``%VAR%`` / ``$VAR``) are expanded so configs
+    stay portable; relative paths resolve against the cwd.
+    """
     if not path:
         return ""
-    p = Path(path)
+    p = Path(os.path.expanduser(os.path.expandvars(path)))
     if not p.is_absolute():
         p = Path.cwd() / p
     return p.read_text(encoding="utf-8").strip() if p.exists() else ""

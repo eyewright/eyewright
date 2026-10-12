@@ -4,7 +4,7 @@
     "laya-serve": {
       "enabled": true,
       "cmd": ["uv", "run", "--with", "laya[serve]", "laya-serve"],
-      "cwd": "C:/Users/kcpat/OneDrive/Documents/Default Project/model-lab/decision-bench",
+      "cwd": "%OneDrive%/Documents/Default Project/model-lab/decision-bench",
       "health": "http://127.0.0.1:8000/health",
       "env": { "LAYA_DEFAULT_MODEL": "typed-decisions" },
       "restart": { "backoff_s": [5, 15, 60, 300], "startup_grace_s": 60 },
@@ -14,7 +14,7 @@
     "ollama": {
       "enabled": false,
       "cmd": ["ollama", "serve"],
-      "cwd": "C:/Users/kcpat",
+      "cwd": "%USERPROFILE%",
       "health": "http://127.0.0.1:11434/api/tags",
       "restart": { "backoff_s": [5, 15, 60] },
       "log": "ollama.log",
