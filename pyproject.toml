@@ -1,6 +1,6 @@
 [project]
 name = "eyewright"
-version = "0.3.0"
+version = "0.3.1"
 description = "eyewright - local decision core: three-eye gate + one-call typed decisions"
 requires-python = ">=3.12"
 dependencies = []
@@ -17,3 +17,7 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["eyewright"]
+
+[tool.hatch.build.targets.sdist]
+# keep research data out of the source distribution (was ~1.2 MB of bench/*.jsonl)
+exclude = ["bench"]
