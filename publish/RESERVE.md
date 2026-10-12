@@ -1,5 +1,9 @@
 # Reserve `eyewright` — PyPI + npm + GitHub
 
+> **Status: DONE (2026-10-09 / 2026-10-12).** PyPI `eyewright` 0.3.1 · npm
+> `eyewright` 0.0.1 (staged → approved) · GitHub org `eyewright` + repo
+> `eyewright/eyewright`. Kept as a record of how the names were claimed.
+
 One-time runbook. Reserving is **irreversible** (PyPI/npm names are permanent
 once published) and **free**. Decision + rationale: **ADR-0005**
 (`local-ai-system/docs/decisions/ADR-0005-public-name-eyewright.md`).
@@ -28,7 +32,7 @@ The real distribution already builds: `dist/eyewright-0.3.0.tar.gz` +
 3. Publish from the repo root:
 
    ```powershell
-   cd C:\Users\kcpat\projects\oracle
+   cd C:\Users\kcpat\projects\eyewright
    uv build                                   # refresh dist/ if sources changed
    $env:UV_PUBLISH_TOKEN = "pypi-<paste-token>"
    uv publish
@@ -53,7 +57,7 @@ Placeholder package is scaffolded at `publish/npm/` (name reservation only).
 `npm` is already logged in as `kcpatt27`.
 
 ```powershell
-cd C:\Users\kcpat\projects\oracle\publish\npm
+cd C:\Users\kcpat\projects\eyewright\publish\npm
 npm whoami                        # expect: kcpatt27
 npm publish --access public       # add --otp=<6-digit> if 2FA prompts
 ```
@@ -84,15 +88,9 @@ creation is web-only:
      --description "eyewright - local decision core (three-eye gate + one-call typed decisions)"
    ```
 
-3. Optional, before the public launch: rename the working directory and push.
-
-   ```powershell
-   # later, deliberately (breaks venv + harness paths until re-synced):
-   Rename-Item C:\Users\kcpat\projects\oracle eyewright
-   cd C:\Users\kcpat\projects\eyewright
-   git remote add origin https://github.com/eyewright/eyewright.git
-   uv sync --extra mcp
-   ```
+3. **Done (2026-10-12):** working directory renamed to
+   `C:\Users\kcpat\projects\eyewright`; `github` remote added; `main` pushed;
+   venv + harness configs repointed.
 
 ---
 
