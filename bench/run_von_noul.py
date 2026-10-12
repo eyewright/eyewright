@@ -5,7 +5,7 @@ import os
 import time
 import urllib.request
 
-OUT_DIR = r"C:\Users\<user>\ai-cache\von-calibrated"
+OUT_DIR = os.path.expanduser(os.environ.get("EYEWRIGHT_VON_OUT", "~/ai-cache/von-calibrated"))
 ap = argparse.ArgumentParser()
 ap.add_argument("--url", default="http://127.0.0.1:8001/v1/systemone")
 ap.add_argument("--key-file", default=".von-api-key")

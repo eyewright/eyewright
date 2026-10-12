@@ -1,8 +1,9 @@
 # eyewright
 
 **eyewright** — the decision core of the local-agent stack. A committee of local
-decision models behind one callable: used at the *decide* step of
-[Orbit](../orbit), and available to any program or AI harness.
+decision models behind one callable: used at the *decide* step of **Orbit** (the
+worker loop — currently a private sibling repo), and available to any program or
+AI harness.
 
 > **Name:** `eyewright` throughout — distribution, import, CLI, and MCP tools.
 > Decision + registry status: **ADR-0005** (`the private research repo/docs/decisions/`).
@@ -94,9 +95,9 @@ harness reload never triggers a `uv sync`/lock cycle:
 ```jsonc
 "eyewright": {
   "type": "local",
-  "command": ["C:/Users/<user>/projects/eyewright/.venv/Scripts/eyewright.exe", "mcp",
-              "--config", "C:/Users/<user>/projects/eyewright/examples/gate.json"],
-  "cwd": "C:/Users/<user>/projects/eyewright"
+  "command": ["C:/Users/<you>/projects/eyewright/.venv/Scripts/eyewright.exe", "mcp",
+              "--config", "C:/Users/<you>/projects/eyewright/examples/gate.json"],
+  "cwd": "C:/Users/<you>/projects/eyewright"
 }
 ```
 

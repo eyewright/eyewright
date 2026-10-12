@@ -14,7 +14,7 @@
     "ollama": {
       "enabled": false,
       "cmd": ["ollama", "serve"],
-      "cwd": "C:/Users/<user>",
+      "cwd": "%USERPROFILE%",
       "health": "http://127.0.0.1:11434/api/tags",
       "restart": { "backoff_s": [5, 15, 60] },
       "log": "ollama.log",
