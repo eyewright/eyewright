@@ -1,5 +1,7 @@
 # Reserve `eyewright` — PyPI + npm + GitHub
 
+> **Internal runbook** — not part of the public-facing docs.
+
 > **Status: DONE (2026-10-09 / 2026-10-12).** PyPI `eyewright` 0.3.1 · npm
 > `eyewright` 0.0.1 (staged → approved) · GitHub org `eyewright` + repo
 > `eyewright/eyewright`. Kept as a record of how the names were claimed.
@@ -20,8 +22,8 @@ Preflight (all three were 404 = free, 2026-10-09; re-check before claiming):
 
 ## 1. PyPI
 
-The real distribution already builds: `dist/eyewright-0.3.0.tar.gz` +
-`eyewright-0.3.0-py3-none-any.whl` (`uv build`). Publishing it reserves the name
+The real distribution already builds: `dist/eyewright-0.3.1.tar.gz` +
+`eyewright-0.3.1-py3-none-any.whl` (`uv build`). Publishing it reserves the name
 **and** ships the actual tool.
 
 1. Create / confirm an account at <https://pypi.org/account/register/> and verify
@@ -45,7 +47,7 @@ The real distribution already builds: `dist/eyewright-0.3.0.tar.gz` +
    (Invoke-WebRequest -Uri "https://pypi.org/pypi/eyewright/json" -SkipHttpErrorCheck).StatusCode
    ```
 
-> Prefer a **placeholder** (hold the real 0.3.0 until launch)? Say so — minimal
+> Prefer a **placeholder** (hold the real release until launch)? Say so — minimal
 > alternative: a 0.0.1 `pyproject.toml` under `publish/pypi/`. Not scaffolded by
 > default because the real dist is ready and lighter to maintain.
 

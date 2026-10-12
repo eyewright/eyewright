@@ -1,5 +1,8 @@
 # Public launch checklist
 
+> **Internal runbook** — not part of the public-facing docs (those are the repo
+> `README.md`, `docs/*` policy docs, and `LICENSE`/`CONTRIBUTING.md`/`SECURITY.md`).
+
 Gate to flip `eyewright/eyewright` from **private → public**. Repo is private as of
 2026-10-12 by decision; nothing below is done unless checked. Work top to bottom.
 
