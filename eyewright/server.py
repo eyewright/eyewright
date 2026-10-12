@@ -8,9 +8,9 @@ Endpoints:
 
 Loopback-only by default. Binding off-loopback **requires** a bearer token
 (``--token`` / ``$EYEWRIGHT_TOKEN``); requests must then send
-``Authorization: Bearer <token>``. Request bodies are capped. Transport is plain
-HTTP: off-loopback, put a TLS terminator or a tunnel in front -- the token is
-authentication, not encryption.
+``Authorization: Bearer <token>``. Request bodies are capped. Add ``--cert`` /
+``--key`` to serve HTTPS. The token is authentication, not encryption, so use TLS
+(or an SSH/VPN tunnel) off-loopback.
 """
 
 import hmac
@@ -143,13 +143,23 @@ def make_handler(cfg, token=None, max_body=DEFAULT_MAX_BODY):
     return Handler
 
 
-def serve(cfg, host="127.0.0.1", port=8090, token=None, max_body=DEFAULT_MAX_BODY):
+def serve(cfg, host="127.0.0.1", port=8090, token=None, max_body=DEFAULT_MAX_BODY,
+          cert=None, key=None):
     token = token or os.environ.get("EYEWRIGHT_TOKEN")
+    if cert and not key:
+        raise SystemExit("--cert requires --key")
     if not _is_loopback(host) and not token:
         raise SystemExit(
             f"refusing to bind {host} without a bearer token; pass --token or set EYEWRIGHT_TOKEN"
         )
     httpd = ThreadingHTTPServer((host, port), make_handler(cfg, token=token, max_body=max_body))
+    if cert:
+        import ssl
+
+        context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+        context.load_cert_chain(certfile=cert, keyfile=key)
+        httpd.socket = context.wrap_socket(httpd.socket, server_side=True)
+    scheme = "https" if cert else "http"
     note = "  (token required)" if token else ""
-    print(f"eyewright serving on http://{host}:{port}{note}  (gate: /v1/gate, ask: /v1/ask)")
+    print(f"eyewright serving on {scheme}://{host}:{port}{note}  (gate: /v1/gate, ask: /v1/ask)")
     httpd.serve_forever()

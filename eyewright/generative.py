@@ -18,7 +18,6 @@ Engine config (inside the gate config):
 """
 
 import json
-import re
 
 from .decide import _post_json
 
@@ -38,12 +37,30 @@ def _ollama_chat(model, messages, options=None, fmt="json", think=None, timeout=
 
 
 def _extract_json(text):
-    m = re.search(r"\{.*\}", text, re.S)
-    if not m:
+    """Return the first JSON object embedded in ``text`` (tolerant of prose).
+
+    ``raw_decode`` from the first ``{`` so trailing text or a second object cannot
+    swallow the parse (a greedy regex used to; see #3).
+    """
+    if not text:
+        return None
+    start = text.find("{")
+    if start == -1:
         return None
     try:
-        return json.loads(m.group(0))
-    except Exception:
+        return json.JSONDecoder().raw_decode(text[start:])[0]
+    except ValueError:
+        depth = 0
+        for i in range(start, len(text)):
+            if text[i] == "{":
+                depth += 1
+            elif text[i] == "}":
+                depth -= 1
+                if depth == 0:
+                    try:
+                        return json.loads(text[start:i + 1])
+                    except ValueError:
+                        return None
         return None
 
 
@@ -66,6 +83,33 @@ def _prompt(state, question, choices, levels):
     )
 
 
+_YES = {"yes", "y", "true", "t", "1"}
+_NO = {"no", "n", "false", "f", "0"}
+
+
+def _normalize_noul(answer):
+    """Map a model's yes/no answer to canonical ``"yes"``/``"no"``.
+
+    Returns ``(value, ok)``. ``ok`` is False when the answer is unrecognized, so
+    the caller sees the raw value instead of a silent guess (see #2). Handles the
+    JSON boolean and numeric forms as well as the string forms.
+    """
+    if isinstance(answer, bool):
+        return ("yes" if answer else "no"), True
+    if isinstance(answer, (int, float)):
+        if answer == 1:
+            return "yes", True
+        if answer == 0:
+            return "no", True
+    if isinstance(answer, str):
+        a = answer.strip().lower()
+        if a in _YES:
+            return "yes", True
+        if a in _NO:
+            return "no", True
+    return answer, False
+
+
 def ask_generative(cfg, state, question, choices=None, levels=None, kind=None):
     """One decision from the configured generative model (raw, uncalibrated)."""
     g = cfg.get("generative") or {}
@@ -84,12 +128,9 @@ def ask_generative(cfg, state, question, choices=None, levels=None, kind=None):
     answer = obj.get("answer")
     conf = obj.get("confidence")
 
-    if kind == "noul" and isinstance(answer, str):
-        a = answer.strip().lower()
-        if a.startswith("y"):
-            answer = "yes"
-        elif a.startswith("n"):
-            answer = "no"
+    normalized = None
+    if kind == "noul":
+        answer, normalized = _normalize_noul(answer)
     if kind == "choice" and choices:
         if isinstance(answer, str):
             match = next((k for k in choices if k.lower() == answer.strip().lower()), None)
@@ -105,7 +146,7 @@ def ask_generative(cfg, state, question, choices=None, levels=None, kind=None):
         conf = round(float(conf), 4) if conf is not None else None
     except (TypeError, ValueError):
         conf = None
-    return {
+    out = {
         "kind": kind,
         "answer": answer,
         "confidence": conf,
@@ -115,3 +156,6 @@ def ask_generative(cfg, state, question, choices=None, levels=None, kind=None):
         "engine": "generative",
         "raw": content[:600],
     }
+    if kind == "noul":
+        out["normalized"] = normalized
+    return out

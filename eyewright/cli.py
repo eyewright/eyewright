@@ -52,6 +52,8 @@ def main(argv=None):
     s.add_argument("--token", help="bearer token for requests (default: $EYEWRIGHT_TOKEN); "
                                    "required when binding off-loopback")
     s.add_argument("--max-body", type=int, default=1000000, help="max request body bytes")
+    s.add_argument("--cert", help="TLS certificate (PEM) -> serve HTTPS")
+    s.add_argument("--key", help="TLS private key (PEM)")
     s.add_argument("--config", default="examples/gate.json")
 
     m = sub.add_parser("mcp", help="MCP stdio server (needs the mcp extra)")
@@ -78,7 +80,8 @@ def main(argv=None):
     if args.cmd == "serve":
         from .server import serve
 
-        serve(cfg, args.host, args.port, token=args.token, max_body=args.max_body)
+        serve(cfg, args.host, args.port, token=args.token, max_body=args.max_body,
+              cert=args.cert, key=args.key)
         return 0
     if args.cmd == "mcp":
         from .mcp_server import run

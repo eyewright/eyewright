@@ -82,6 +82,12 @@ uv run eyewright serve --port 8090
 # POST /v1/ask   {"state": "...", "question": "...", "choices"?|"levels"?, "engine"?: "generative"|"auto"}  -> {kind, answer, confidence, ...}
 ```
 
+Auth & TLS: `serve` is loopback-only by default. Binding off-loopback
+(`--host 0.0.0.0`) **requires** a bearer token (`--token` / `$EYEWRIGHT_TOKEN`),
+and requests must send `Authorization: Bearer <token>`. Add `--cert`/`--key` to
+serve HTTPS. The token is authentication, not encryption — off-loopback use TLS
+(or an SSH/VPN tunnel). Request bodies are capped (default 1 MB).
+
 **MCP** (for any AI harness; needs the `mcp` extra)
 ```powershell
 uv run --extra mcp eyewright mcp
