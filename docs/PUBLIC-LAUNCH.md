@@ -7,8 +7,9 @@ Gate to flip `eyewright/eyewright` from **private → public**. Repo is private 
 - [x] **License:** **Apache-2.0 + `NOTICE` + DCO** (decided 2026-10-12). Wired:
       `LICENSE`, `NOTICE`, `DCO`, `CONTRIBUTING.md`, `AUTHORS`, `PROVENANCE.md`,
       and the `pyproject.toml` metadata.
-- [ ] **What ships:** keep `bench/*.jsonl` research data in the public repo, or
-      strip to code + docs? (Already excluded from the sdist; still in git.)
+- [x] **What ships:** `bench/` trimmed — the raw `responses-*.jsonl` are removed
+      (29 files backed up to `%USERPROFILE%\ai-cache\eyewright-bench`, gitignored,
+      regenerable); scripts + cases + `*.md` stay. `bench/` ≈ 6.8 MB (was 19.5 MB).
 - [ ] **Family shape:** is `eyewright` only the gate, or the house name? Affects the
       README framing and the GitHub org description.
 
@@ -24,11 +25,14 @@ Gate to flip `eyewright/eyewright` from **private → public**. Repo is private 
       the next version bump (`uv version --bump patch` → publish)
 
 ## 2. Secret / sensitive scan (full git history, not just HEAD)
-- [ ] scan history for keys/tokens (`pypi-AgEI`, `npm_`, `sk-`, `gho_`, `-----BEGIN`)
-- [ ] confirm `.env`, `*.key`, `*api-key*`, `dist/`, `.venv/`, `*.log`, `*.pid` were
-      never tracked
-- [ ] review `publish/RESERVE.md`, `docs/`, `bench/` for anything private
-- [ ] `supervisor/logs/` + `*.pid` untracked (verify)
+- [x] history scanned (all 14 commits) — no keys/tokens; `.env`, `*.key`,
+      `*api-key*`, `dist/`, `.venv/`, `*.log`, `*.pid` were never tracked
+- [x] personal paths scrubbed (`%USERPROFILE%` / `%OneDrive%` / env vars;
+      `key_file` + supervisor `cwd` now expand env vars). Only the `kcpatt27`
+      handle remains (attribution).
+- [x] `publish/RESERVE.md` / `docs/` / `bench/` reviewed — synthetic data only
+      (fake `example.com` emails, RFC-5737 IPs); no real PII
+- [x] `supervisor/logs/` + `*.pid` are gitignored
 
 ## 3. Docs
 - [ ] README outcome-first: one-liner, bench card, install line, repo URL
