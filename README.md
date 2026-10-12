@@ -94,9 +94,9 @@ harness reload never triggers a `uv sync`/lock cycle:
 ```jsonc
 "eyewright": {
   "type": "local",
-  "command": ["C:/Users/<user>/projects/oracle/.venv/Scripts/eyewright.exe", "mcp",
-              "--config", "C:/Users/<user>/projects/oracle/examples/gate.json"],
-  "cwd": "C:/Users/<user>/projects/oracle"
+  "command": ["C:/Users/<user>/projects/eyewright/.venv/Scripts/eyewright.exe", "mcp",
+              "--config", "C:/Users/<user>/projects/eyewright/examples/gate.json"],
+  "cwd": "C:/Users/<user>/projects/eyewright"
 }
 ```
 
