@@ -22,8 +22,10 @@ import time
 import urllib.request
 from pathlib import Path
 
+DEFAULT_TIMEOUT_S = 120  # per-eye request timeout; override with cfg "timeout_s"
 
-def _post_json(url, payload, timeout=1800):
+
+def _post_json(url, payload, timeout=DEFAULT_TIMEOUT_S):
     data = json.dumps(payload).encode()
     req = urllib.request.Request(url, data=data, headers={"Content-Type": "application/json"})
     with urllib.request.urlopen(req, timeout=timeout) as r:
@@ -44,17 +46,17 @@ def load_key(path):
     return p.read_text(encoding="utf-8").strip() if p.exists() else ""
 
 
-def systemone_ollama(stage, state, question):
+def systemone_ollama(stage, state, question, timeout=DEFAULT_TIMEOUT_S):
     payload = {
         "model": stage["model"],
         "state": state,
         "questions": {"done": {"type": "noul", "instructions": question}},
     }
-    resp = _post_json("http://localhost:11434/v1/systemone", payload)
+    resp = _post_json("http://localhost:11434/v1/systemone", payload, timeout=timeout)
     return float(resp["answers"]["done"]["noul"])
 
 
-def systemone_http(url, key, state, question, model=None):
+def systemone_http(url, key, state, question, model=None, timeout=DEFAULT_TIMEOUT_S):
     payload = {
         "state": state,
         "questions": {"done": {"type": "noul", "instructions": question}},
@@ -67,12 +69,12 @@ def systemone_http(url, key, state, question, model=None):
     )
     if key:
         req.add_header("Authorization", "Bearer " + key)
-    with urllib.request.urlopen(req, timeout=1800) as r:
+    with urllib.request.urlopen(req, timeout=timeout) as r:
         resp = json.loads(r.read().decode())
     return float(resp["answers"]["done"]["noul"])
 
 
-def openrouter_decisions(entry, state, question):
+def openrouter_decisions(entry, state, question, timeout=DEFAULT_TIMEOUT_S):
     """Native decisions API (Typesafe Jev on OpenRouter).
 
     Same `state`/`questions` shape as systemone, so Jev plugs into the committee
@@ -93,7 +95,7 @@ def openrouter_decisions(entry, state, question):
     if key:
         headers["Authorization"] = "Bearer " + key
     req = urllib.request.Request(url, data=json.dumps(payload).encode(), headers=headers)
-    with urllib.request.urlopen(req, timeout=180) as r:
+    with urllib.request.urlopen(req, timeout=timeout) as r:
         resp = json.loads(r.read().decode())
     return float((resp.get("answers") or {}).get("done", {}).get("noul"))
 
@@ -103,8 +105,11 @@ def decide_gate(cfg, state, question):
     Trust a consensus of >=2 confident consults; otherwise review (retry/gather evidence).
 
     Resilience (config):
-      - ``retries`` (default 1) + ``retry_backoff_s`` (default 1.0) — attempts on an
-        eye before it is considered unavailable.
+      - ``attempts`` (default 1) + ``retry_backoff_s`` (default 1.0) — total attempts
+        on an eye. ``retries`` is a legacy alias meaning attempts beyond the first
+        (attempts = retries + 1).
+      - ``timeout_s`` (default 120) — per-eye request timeout (per-entry override
+        allowed with ``entry["timeout_s"]``).
       - ``on_primary_unavailable`` — ``fallback`` (default: use consults[0] as the
         stand-in main), ``review`` (never substitute silently; the caller reviews),
         ``error`` (raise). The trace records ``policy`` and any ``primary_error``.
@@ -118,19 +123,28 @@ def decide_gate(cfg, state, question):
     high = float(cfg.get("high_confidence", 0.9))
     delta = float(cfg.get("match_delta", 0.05))
     policy = str(cfg.get("on_primary_unavailable", "fallback")).lower()
-    attempts = max(1, int(cfg.get("retries", 1)))
+    # `attempts` = total attempts (default 1). `retries` is a legacy alias meaning
+    # retries *after* the first attempt, so attempts = retries + 1 (see #5).
+    if "attempts" in cfg:
+        attempts = max(1, int(cfg["attempts"]))
+    elif "retries" in cfg:
+        attempts = max(1, int(cfg["retries"]) + 1)
+    else:
+        attempts = 1
     backoff = float(cfg.get("retry_backoff_s", 1.0))
+    timeout = float(cfg.get("timeout_s", DEFAULT_TIMEOUT_S))
     trace = {"consults": {}, "policy": policy}
 
     def ask(entry):
         t = entry.get("type")
+        entry_timeout = float(entry.get("timeout_s", timeout))
         if t == "systemone-http":
             key = load_key(entry.get("key_file") or "")
-            return systemone_http(entry["url"], key, state, question, entry.get("model"))
+            return systemone_http(entry["url"], key, state, question, entry.get("model"), entry_timeout)
         if t == "systemone-ollama":
-            return systemone_ollama(entry, state, question)
+            return systemone_ollama(entry, state, question, entry_timeout)
         if t == "openrouter-decisions":
-            return openrouter_decisions(entry, state, question)
+            return openrouter_decisions(entry, state, question, entry_timeout)
         raise ValueError("unknown consult type")
 
     def ask_retry(entry):

@@ -178,10 +178,12 @@ von is retired from the consult roster (2026-10-06). See `docs/THREE-EYE.md`.
   instance). `laya-serve`'s descriptor pins `LAYA_DEFAULT_MODEL=typed-decisions`.
   Autostart at logon: `pwsh -File supervisor/install.ps1`. The descriptor is
   generic — ctxd's Model Router can adopt it.
-- **Caller**: `decide_gate` retries the primary (`retries`, `retry_backoff_s`) and
-  applies `on_primary_unavailable`: `fallback` (default) / `review` / `error`.
-  The trace always records `policy` and `primary_error`, so degradation is never
-  silent. `eyewright gate --start-services` runs the supervisor once first.
+- **Caller**: `decide_gate` retries the primary (`attempts`, `retry_backoff_s`;
+  `retries` is a legacy alias for attempts-beyond-first) and applies
+  `on_primary_unavailable`: `fallback` (default) / `review` / `error`. Per-eye
+  requests time out at `timeout_s` (default 120). The trace always records
+  `policy` and `primary_error`, so degradation is never silent.
+  `eyewright gate --start-services` runs the supervisor once first.
 - **Deep health**: `GET /health/deep` (or `/health?deep=1`) reports per-dependency
   reachability (laya-serve, ollama, openrouter).
 
