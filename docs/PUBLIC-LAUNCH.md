@@ -50,6 +50,19 @@ Ten issues filed from a full read of the source (`eyewright/eyewright#1`–`#10`
 - **enhancements:** #8 MCP `levels` · #9 CI (tests + build)
 - **docs:** #10 README quickstart + license section
 
+### Security pass (2026-10-12)
+
+New `security` label; issues #12–#17:
+- #12 TLS / plaintext transport off-loopback
+- #13 config trust boundary (`key_file` + `url` can exfiltrate local files)
+- #14 document cloud-eye egress (`state` leaves the box)
+- #15 pin `mcp` + dependency auditing
+- #16 serve concurrency cap / rate limit
+- #17 local-exec trust (svcwatch / `--start-services`)
+
+**Fixed this pass (PR #11):** #1 version drift · #7 serve hardening
+(cap + generic errors + constant-time token + refuse off-loopback without token).
+
 ## 4. Package metadata
 - [ ] PyPI: classifiers, keywords, `[project.urls]` (Homepage / Repository / Issues)
 - [ ] clean-env check: `pip install eyewright` → `python -c "import eyewright"`
