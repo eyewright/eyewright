@@ -15,6 +15,23 @@ AI harness.
   agreeing → consensus; one confident + another within 0.05 of main →
   review-conflict → the caller gathers more evidence.
 
+## Install
+
+```powershell
+pip install eyewright        # or: uv add eyewright
+```
+
+```python
+from eyewright import ask
+
+ask(cfg, "a = 1, b = 2", "Which relation holds?",
+    choices={"a_bigger": "a is bigger", "b_bigger": "b is bigger"})
+```
+
+`cfg` is a gate config (see `examples/gate.json`). The default gate is fully
+local; a cloud eye is opt-in. Four ways to call it — **Python · CLI · HTTP ·
+MCP** — are below.
+
 ## Local-first, with an optional upgrade
 
 The default gate is **fully local** — Ollama (`gemma4:12b`, `tev1:4b`) plus a local
@@ -168,6 +185,20 @@ von is retired from the consult roster (2026-10-06). See `docs/THREE-EYE.md`.
 - **Deep health**: `GET /health/deep` (or `/health?deep=1`) reports per-dependency
   reachability (laya-serve, ollama, openrouter).
 
+## Egress & privacy
+
+The default gate is **fully local** — no prompts leave the machine. Configuring
+an `openrouter-decisions` eye sends `state`/`question` to OpenRouter; `"zdr": true`
+is **request-level routing**, not a guarantee (only self-hosting is independently
+verifiable). Treat `state` as leaving the box whenever a cloud eye is configured.
+
+## Security
+
+Gate configs are **trusted input** — they can name a `key_file` (read from disk)
+and a `url` (where the key is sent); only run configs you trust. Serving is
+loopback-only by default; see "Auth & TLS" above. Report vulnerabilities per
+[`SECURITY.md`](SECURITY.md).
+
 ## Roadmap
 
 1. ✅ `eyewright ask` (package + CLI) and `eyewright serve` (HTTP).
@@ -177,3 +208,9 @@ von is retired from the consult roster (2026-10-06). See `docs/THREE-EYE.md`.
 4. Next: post-hoc calibration of the generative engine (ticket path D); wire as
    a verifier provider into an agent control plane's Audit plane / control-plane's verifier
    family (advisory, never the truth).
+
+## License
+
+Apache-2.0 — see [`LICENSE`](LICENSE) and [`NOTICE`](NOTICE). Contributions are
+accepted under the Developer Certificate of Origin ([`DCO`](DCO)); see
+[`CONTRIBUTING.md`](CONTRIBUTING.md).
