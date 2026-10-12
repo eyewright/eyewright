@@ -3,13 +3,26 @@ name = "eyewright"
 version = "0.3.1"
 description = "eyewright - local decision core: three-eye gate + one-call typed decisions"
 requires-python = ">=3.12"
+license = "Apache-2.0"
+license-files = ["LICENSE", "NOTICE"]
 dependencies = []
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+]
 
 [project.optional-dependencies]
 mcp = ["mcp>=2"]
 
 [project.scripts]
 eyewright = "eyewright.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/eyewright/eyewright"
+Repository = "https://github.com/eyewright/eyewright"
+Issues = "https://github.com/eyewright/eyewright/issues"
 
 [build-system]
 requires = ["hatchling"]
