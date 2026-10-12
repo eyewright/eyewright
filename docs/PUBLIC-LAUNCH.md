@@ -35,10 +35,20 @@ Gate to flip `eyewright/eyewright` from **private → public**. Repo is private 
 - [x] `supervisor/logs/` + `*.pid` are gitignored
 
 ## 3. Docs
-- [ ] README outcome-first: one-liner, bench card, install line, repo URL
+- [ ] README outcome-first: one-liner, bench card, install line, repo URL (→ #10)
 - [ ] 90-second demo (LAUNCH.md §5)
 - [ ] split internal vs public docs; remove or clearly label internal notes
-- [ ] 5 `good first issue`s
+- [x] 5 `good first issue`s — #1, #2, #8, #9, #10 (from the 2026-10-12 bug audit)
+
+### Bug / issue audit (2026-10-12)
+
+Ten issues filed from a full read of the source (`eyewright/eyewright#1`–`#10`):
+
+- **bugs:** #1 `__version__` drift · #2 generative `true`/`false` unnormalized ·
+  #3 `_extract_json` greedy · #4 `engine=auto` fallback scope · #5 `retries`
+  off-by-one · #6 hardcoded 1800 s timeouts · #7 `serve` request hardening
+- **enhancements:** #8 MCP `levels` · #9 CI (tests + build)
+- **docs:** #10 README quickstart + license section
 
 ## 4. Package metadata
 - [ ] PyPI: classifiers, keywords, `[project.urls]` (Homepage / Repository / Issues)
