@@ -21,8 +21,9 @@
   "consult_threshold": 0.55,
   "high_confidence": 0.9,
   "match_delta": 0.05,
-  "retries": 1,
+  "attempts": 1,
   "retry_backoff_s": 1.0,
+  "timeout_s": 120,
   "on_primary_unavailable": "fallback",
   "generative": {
     "type": "ollama",
