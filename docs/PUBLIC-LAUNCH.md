@@ -38,10 +38,10 @@ Gate to flip `eyewright/eyewright` from **private → public**. Repo is private 
 - [x] `supervisor/logs/` + `*.pid` are gitignored
 
 ## 3. Docs
-- [ ] README outcome-first: one-liner, bench card, install line, repo URL (→ #10)
+- [x] README: install/quickstart, egress, security, license sections (PR #19, #10)
 - [ ] 90-second demo (LAUNCH.md §5)
-- [ ] split internal vs public docs; remove or clearly label internal notes
-- [x] 5 `good first issue`s — #1, #2, #8, #9, #10 (from the 2026-10-12 bug audit)
+- [x] internal vs public docs: runbooks labelled internal + `docs/README.md` index
+- [x] 5 `good first issue`s filed (#1, #2, #8, #9, #10); #1/#2/#10 already fixed
 
 ### Bug / issue audit (2026-10-12)
 
@@ -63,8 +63,11 @@ New `security` label; issues #12–#17:
 - #16 serve concurrency cap / rate limit
 - #17 local-exec trust (svcwatch / `--start-services`)
 
-**Fixed this pass (PR #11):** #1 version drift · #7 serve hardening
-(cap + generic errors + constant-time token + refuse off-loopback without token).
+**Merged:** PR #11 (#1, #7) · PR #18 (#2, #3, #12) · PR #19 (#10, #14, #17).
+
+**Open:** #4 `engine=auto` fallback · #5 `retries` semantics · #6 timeouts ·
+#8 MCP `levels` · #9 CI · #13 config `key_file`/`url` hardening · #15 pin `mcp` ·
+#16 rate limit.
 
 ## 4. Package metadata
 - [ ] PyPI: classifiers, keywords, `[project.urls]` (Homepage / Repository / Issues)
