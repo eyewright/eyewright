@@ -8,4 +8,7 @@ __pycache__/
 
 # regenerable bench outputs (see bench/README.md)
 bench/responses-*.jsonl
+
+# audit / scratch working files (local only; not shipped)
+.scratch/
 *.pid
