@@ -2,13 +2,20 @@
 
 Notable changes to eyewright. Versions are the distribution version.
 
-## Unreleased
+## 0.4.0 — 2026-10-12
 
 - `__version__` single-sourced from package metadata (no more drift).
-- `serve` hardening: bearer token (constant-time), 1 MB body cap, generic errors,
-  refusal to bind off-loopback without a token, optional TLS (`--cert`/`--key`).
+- `serve`: bearer token (constant-time), 1 MB body cap, generic errors, refuses
+  off-loopback without a token, optional TLS (`--cert`/`--key`), and drains the
+  request body before a `401`/`413` so the client can read the response.
+- `ask --engine auto`: falls back to the generative engine on any no-signal typed
+  decision *or* an error, not only `decision:none`.
+- **`attempts`** is the config key for total attempts (default 1); `retries` is a
+  legacy alias meaning attempts *beyond* the first (behavior change).
+- Configurable per-eye `timeout_s` (default 120 s), replacing the hardcoded values.
 - generative engine: robust first-object JSON extraction; canonical `yes`/`no`
   normalization (handles `true`/`false`, `1`/`0`).
+- tests: `test_generative`, `test_auto_fallback`, `test_version`.
 
 ## 0.3.1
 

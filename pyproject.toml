@@ -1,6 +1,6 @@
 [project]
 name = "eyewright"
-version = "0.3.1"
+version = "0.4.0"
 description = "eyewright - local decision core: three-eye gate + one-call typed decisions"
 requires-python = ">=3.12"
 license = "Apache-2.0"
