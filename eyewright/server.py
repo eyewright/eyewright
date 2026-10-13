@@ -81,6 +81,16 @@ def make_handler(cfg, token=None, max_body=DEFAULT_MAX_BODY):
             header = self.headers.get("Authorization", "")
             return hmac.compare_digest(header, "Bearer " + token)
 
+        def _drain(self, declared):
+            """Discard up to a bounded amount of the declared body so the client can
+            read our response instead of getting an RST (#23)."""
+            remaining = min(declared, 8 * 1024 * 1024) if declared > 0 else 0
+            while remaining > 0:
+                chunk = self.rfile.read(min(65536, remaining))
+                if not chunk:
+                    break
+                remaining -= len(chunk)
+
         def do_GET(self):
             deep = "deep" in self.path
             if deep and not self._authorized():
@@ -97,23 +107,18 @@ def make_handler(cfg, token=None, max_body=DEFAULT_MAX_BODY):
                 self._send(404, {"error": "not found"})
 
         def do_POST(self):
-            if not self._authorized():
-                self._send(401, {"error": "unauthorized"})
-                return
             try:
                 n = int(self.headers.get("Content-Length") or 0)
             except ValueError:
                 self._send(400, {"error": "bad content-length"})
                 return
+            if not self._authorized():
+                # drain first so the client can read the 401, not an RST (#23)
+                self._drain(n)
+                self._send(401, {"error": "unauthorized"})
+                return
             if n < 0 or n > max_body:
-                # drain a bounded amount so the client can read our 413 cleanly,
-                # without ever holding the (oversize) body in memory
-                remaining = min(n, 8 * 1024 * 1024) if n > 0 else 0
-                while remaining > 0:
-                    chunk = self.rfile.read(min(65536, remaining))
-                    if not chunk:
-                        break
-                    remaining -= len(chunk)
+                self._drain(n)
                 self._send(413, {"error": f"body too large (max {max_body} bytes)"})
                 return
             try:
