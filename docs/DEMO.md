@@ -4,6 +4,17 @@ Recording script. Target **90 s**. Everything runs **locally** on the recorder's
 machine. Numbers below are the shapes to show; **dry-run every command off-camera**
 and keep the real output for the take.
 
+## Format (read first)
+This is **one continuous screen recording — not screenshots.** You screen-record as
+you do the actions; the `0:00 / 0:12 / …` below are **timestamps in the video**
+(moments), not files. Record with the **terminal maximized** (OBS *Window Capture*
+on the terminal window, or just a full-screen terminal; Windows Game Bar works too).
+
+Everything happens in **one terminal** except two **optional** browser-tab beats
+(the bench table at 1:00, the URL at 1:15) — skip those by narrating over the
+terminal. You type exactly four things: nothing (0:00), command 1 (0:12),
+command 2 (0:30), and `pip install` (1:15).
+
 ## Pre-flight (once, off-camera)
 - **Services up:** laya-serve `:8000` + Ollama `:11434`. Fastest: run one command
   with `--start-services`, or start the supervisor (`supervisor/svcwatch.py`).
@@ -14,11 +25,12 @@ and keep the real output for the take.
 
 ## Beats
 
-**0:00 — the problem** (empty terminal, one line on screen)
+**0:00 — the problem** (empty terminal — just talk; no action)
 > "Every agent loop has a *decide* step — 'is this done?' — and almost everyone
 > hardcodes it as a magic number. It's the weakest part of the loop."
 
-On screen: `if score > 0.7: accept  # the magic number`
+(Optional: overlay the one line `if score > 0.7: accept  # the magic number` in
+edit. Not required.)
 
 **0:12 — the typed gate**
 ```powershell
