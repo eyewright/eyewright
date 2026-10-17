@@ -6,26 +6,52 @@
 # task, create it elevated:
 #   schtasks /Create /TN eyewright-svcwatch /SC ONLOGON /RL LIMITED /F `
 #     /TR "\"C:\path\pythonw.exe\" \"C:\path\supervisor\svcwatch.py\""
-param([switch]$Uninstall)
+param([switch]$Uninstall, [switch]$Tray)
 $ErrorActionPreference = 'Stop'
 $here = Split-Path -Parent $MyInvocation.MyCommand.Path
 $script = Join-Path $here 'svcwatch.py'
+$tray = Join-Path $here 'tray.py'
 $startup = [Environment]::GetFolderPath('Startup')
-$launcher = Join-Path $startup 'eyewright-svcwatch.cmd'
+$cmdLauncher = Join-Path $startup 'eyewright-svcwatch.cmd'
+$lnkLauncher = Join-Path $startup 'eyewright tray.lnk'
 
 if ($Uninstall) {
-    Remove-Item $launcher -ErrorAction SilentlyContinue
-    $pidFile = Join-Path $here 'svcwatch.pid'
-    if (Test-Path $pidFile) {
-        $old = Get-Content $pidFile -ErrorAction SilentlyContinue
-        if ($old) { Stop-Process -Id ([int]$old) -Force -ErrorAction SilentlyContinue }
+    Remove-Item $cmdLauncher, $lnkLauncher -ErrorAction SilentlyContinue
+    foreach ($pidFile in @((Join-Path $here 'svcwatch.pid'), (Join-Path $here 'tray.pid'))) {
+        if (Test-Path $pidFile) {
+            $old = Get-Content $pidFile -ErrorAction SilentlyContinue
+            if ($old) { Stop-Process -Id ([int]$old) -Force -ErrorAction SilentlyContinue }
+        }
     }
-    Write-Output "uninstalled (removed $launcher)"
+    Write-Output "uninstalled (removed $cmdLauncher and $lnkLauncher)"
     return
 }
 
 $py = (Get-Command pythonw.exe -ErrorAction SilentlyContinue).Source
 if (-not $py) { $py = (Get-Command python.exe).Source }
+
+if ($Tray) {
+    # One windowless process: tray + supervisor loop + Decide dialog.
+    # A .lnk (not a .cmd) means no cmd.exe flash at logon.
+    Remove-Item $cmdLauncher -ErrorAction SilentlyContinue
+    $svcPid = Join-Path $here 'svcwatch.pid'
+    if (Test-Path $svcPid) {
+        $old = Get-Content $svcPid -ErrorAction SilentlyContinue
+        if ($old) { Stop-Process -Id ([int]$old) -Force -ErrorAction SilentlyContinue }
+        Remove-Item $svcPid -ErrorAction SilentlyContinue
+    }
+    $sh = New-Object -ComObject WScript.Shell
+    $l = $sh.CreateShortcut($lnkLauncher)
+    $l.TargetPath = $py
+    $l.Arguments = '"' + $tray + '"'
+    $l.WorkingDirectory = $here
+    $l.Description = 'eyewright tray (supervisor + Decide)'
+    $l.Save()
+    Write-Output "installed startup shortcut: $lnkLauncher  (python: $py)"
+    Start-Process -FilePath $py -ArgumentList @($tray) -WorkingDirectory $here -WindowStyle Hidden
+    Write-Output "started eyewright tray now"
+    return
+}
 
 $cmd = @(
     '@echo off',

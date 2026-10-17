@@ -1,6 +1,8 @@
 # Tray + Decide UI
 
-**Status:** proposal — not implemented (2026-10-15).
+**Status:** implemented v0.1 (2026-10-17) — `supervisor/tray.py`, `pystray` + `tkinter`.
+Install: `pwsh -File supervisor/install.ps1 -Tray`. Self-check:
+`python supervisor/tray.py --check`.
 **Goal:** keep eyewright one click away — a notification-tray icon that shows service
 health and opens a small "Decide" window (files / folders / text) that calls the gate
 or the generative engine.

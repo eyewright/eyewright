@@ -15,6 +15,7 @@ classifiers = [
 
 [project.optional-dependencies]
 mcp = ["mcp>=2"]
+tray = ["pystray>=0.19", "pillow>=10"]
 
 [project.scripts]
 eyewright = "eyewright.cli:main"
