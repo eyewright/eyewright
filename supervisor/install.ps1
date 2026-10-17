@@ -33,6 +33,9 @@ if (-not $py) { $py = (Get-Command python.exe).Source }
 if ($Tray) {
     # One windowless process: tray + supervisor loop + Decide dialog.
     # A .lnk (not a .cmd) means no cmd.exe flash at logon.
+    # Must use the project venv: pystray/pillow/eyewright live there, not in PATH python.
+    $venvPy = Join-Path (Split-Path -Parent $here) '.venv\Scripts\pythonw.exe'
+    if (Test-Path $venvPy) { $py = $venvPy }
     Remove-Item $cmdLauncher -ErrorAction SilentlyContinue
     $svcPid = Join-Path $here 'svcwatch.pid'
     if (Test-Path $svcPid) {
