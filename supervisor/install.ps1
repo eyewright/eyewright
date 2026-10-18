@@ -10,7 +10,7 @@ param([switch]$Uninstall, [switch]$Tray)
 $ErrorActionPreference = 'Stop'
 $here = Split-Path -Parent $MyInvocation.MyCommand.Path
 $script = Join-Path $here 'svcwatch.py'
-$tray = Join-Path $here 'tray.py'
+$trayScript = Join-Path $here 'tray.py'
 $startup = [Environment]::GetFolderPath('Startup')
 $cmdLauncher = Join-Path $startup 'eyewright-svcwatch.cmd'
 $lnkLauncher = Join-Path $startup 'eyewright tray.lnk'
@@ -46,12 +46,12 @@ if ($Tray) {
     $sh = New-Object -ComObject WScript.Shell
     $l = $sh.CreateShortcut($lnkLauncher)
     $l.TargetPath = $py
-    $l.Arguments = '"' + $tray + '"'
+    $l.Arguments = '"' + $trayScript + '"'
     $l.WorkingDirectory = $here
     $l.Description = 'eyewright tray (supervisor + Decide)'
     $l.Save()
     Write-Output "installed startup shortcut: $lnkLauncher  (python: $py)"
-    Start-Process -FilePath $py -ArgumentList @($tray) -WorkingDirectory $here -WindowStyle Hidden
+    Start-Process -FilePath $py -ArgumentList @($trayScript) -WorkingDirectory $here -WindowStyle Hidden
     Write-Output "started eyewright tray now"
     return
 }

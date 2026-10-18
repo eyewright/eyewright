@@ -99,7 +99,7 @@ def decide(text, files, folders, question, engine):
 
     cfg = json.loads(CONFIG.read_text(encoding="utf-8"))
     state = build_state(text, files, folders)
-    return ask(cfg, state, question, engine=None if engine == "auto" else engine)
+    return ask(cfg, state, question, engine=engine)
 
 
 def _dot(color: str):
