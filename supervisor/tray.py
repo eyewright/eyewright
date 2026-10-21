@@ -43,6 +43,25 @@ DEFAULT_QUESTION = "Is this acceptable?"
 _events: "queue.Queue[tuple]" = queue.Queue()
 
 
+def _hide_console() -> None:
+    """Hide the console window the venv's ``pythonw`` shim still allocates.
+
+    uv's ``.venv/Scripts/pythonw.exe`` is console-subsystem (unlike the base
+    interpreter's GUI ``pythonw.exe``), so starting the tray from a GUI shortcut
+    pops a terminal at logon. Hide it; a logon entry must leave no stray window.
+    """
+    if os.name != "nt":
+        return
+    try:
+        import ctypes
+
+        hwnd = ctypes.windll.kernel32.GetConsoleWindow()
+        if hwnd:
+            ctypes.windll.user32.ShowWindow(hwnd, 0)  # SW_HIDE
+    except Exception:
+        pass
+
+
 def log(msg: str) -> None:
     line = f"{time.strftime('%Y-%m-%d %H:%M:%S')} {msg}"
     LOG_DIR.mkdir(parents=True, exist_ok=True)
@@ -363,6 +382,8 @@ def check() -> int:
 
 
 def main() -> int:
+    _hide_console()
+
     import tkinter as tk
 
     import pystray

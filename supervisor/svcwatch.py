@@ -72,8 +72,11 @@ def start(name, svc):
     fh = open(logf, "a", encoding="utf-8")
     flags = 0
     if os.name == "nt":
-        flags = subprocess.CREATE_NEW_PROCESS_GROUP | getattr(subprocess, "DETACHED_PROCESS", 0)
-    proc = subprocess.Popen(svc["cmd"], cwd=cwd, env=env, stdout=fh, stderr=subprocess.STDOUT, creationflags=flags)
+        # CREATE_NO_WINDOW, not DETACHED_PROCESS: `uv run` allocates a console for
+        # its child, which surfaced as a stray terminal window at logon.
+        flags = subprocess.CREATE_NEW_PROCESS_GROUP | getattr(subprocess, "CREATE_NO_WINDOW", 0)
+    proc = subprocess.Popen(svc["cmd"], cwd=cwd, env=env, stdin=subprocess.DEVNULL,
+                            stdout=fh, stderr=subprocess.STDOUT, creationflags=flags)
     log(f"started {name} (pid {proc.pid}) -> {logf}")
     return proc
 
