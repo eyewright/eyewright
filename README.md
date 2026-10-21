@@ -105,12 +105,12 @@ and requests must send `Authorization: Bearer <token>`. Add `--cert`/`--key` to
 serve HTTPS. The token is authentication, not encryption — off-loopback use TLS
 (or an SSH/VPN tunnel). Request bodies are capped (default 1 MB).
 
-**MCP** (for any AI harness; needs the `mcp` extra)
+**MCP** (for any AI harness)
 ```powershell
-uv run --extra mcp eyewright mcp
+uv run eyewright mcp
 # tools: eyewright_gate(state, question), eyewright_ask(state, question, choices?, engine?)
 ```
-Smoke test: `uv run --extra mcp python tests/mcp_smoke.py`.
+Smoke test: `uv run python tests/mcp_smoke.py`.
 
 Wired into OpenCode + Cursor on this machine. Use the **venv exe directly** so a
 harness reload never triggers a `uv sync`/lock cycle:
@@ -124,7 +124,10 @@ harness reload never triggers a `uv sync`/lock cycle:
 }
 ```
 
-Setup: `uv sync --extra mcp` once so the venv has the `mcp` extra.
+Setup: `uv sync` once. The `runtime` group in `pyproject.toml` holds `mcp` +
+`pystray` + `pillow`, and it is a **default** group — so every later `uv sync`
+(exact, so it prunes extras) and `uv run` keeps those packages installed. A
+published install opts in instead: `pip install 'eyewright[mcp]'`.
 
 Config for all four faces: `examples/gate.json` (primary + consults +
 thresholds). Pass `--config <path>` elsewhere.

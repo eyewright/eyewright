@@ -20,6 +20,22 @@ tray = ["pystray>=0.19", "pillow>=10"]
 [project.scripts]
 eyewright = "eyewright.cli:main"
 
+# This checkout runs every face of eyewright (tray in supervisor/, MCP for AI
+# harnesses), and harnesses launch `.venv/Scripts/eyewright.exe` directly — so the
+# venv must keep those deps. A default group survives `uv sync`'s exact sync,
+# which would otherwise prune anything installed only via `--extra`.
+# Published consumers stay slim: `pip install eyewright` has no deps,
+# `eyewright[mcp]` / `eyewright[tray]` opt in. Keep versions in sync with the extras.
+[dependency-groups]
+runtime = [
+    "mcp>=2",
+    "pystray>=0.19",
+    "pillow>=10",
+]
+
+[tool.uv]
+default-groups = ["runtime"]
+
 [project.urls]
 Homepage = "https://github.com/eyewright/eyewright"
 Repository = "https://github.com/eyewright/eyewright"

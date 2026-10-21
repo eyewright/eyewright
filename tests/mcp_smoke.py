@@ -1,6 +1,9 @@
-"""Stdio smoke test for `eyewright mcp` (run with the mcp extra):
+"""Stdio smoke test for `eyewright mcp` — the same bare launch path harnesses use:
 
-    uv run --extra mcp python tests/mcp_smoke.py
+    uv run python tests/mcp_smoke.py
+
+Needs the `mcp` package (default `runtime` group, or the `mcp` extra). The live
+gate call needs the local services (laya-serve :8000, Ollama :11434).
 """
 
 import asyncio
@@ -15,7 +18,9 @@ async def main():
         async with ClientSession(read, write) as session:
             await session.initialize()
             tools = await session.list_tools()
-            print("tools:", [t.name for t in tools.tools])
+            names = {t.name for t in tools.tools}
+            print("tools:", sorted(names))
+            assert names == {"eyewright_gate", "eyewright_ask"}, names
             res = await session.call_tool(
                 "eyewright_gate",
                 {"state": "The sky is blue.", "question": "Is the statement true?"},

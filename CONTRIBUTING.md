@@ -25,9 +25,9 @@ Use a real name and a valid email. Commits without a sign-off can't be merged.
 ## Dev setup
 
 ```
-uv sync --extra mcp                         # venv + the optional mcp extra
+uv sync                  # venv + default `runtime` group (mcp, pystray, pillow)
 uv run eyewright --help
-uv run --extra mcp python tests/mcp_smoke.py
+uv run python tests/mcp_smoke.py
 ```
 
 The gate policy in `eyewright/gate.py` is the single source of truth; the

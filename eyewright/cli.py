@@ -56,7 +56,7 @@ def main(argv=None):
     s.add_argument("--key", help="TLS private key (PEM)")
     s.add_argument("--config", default="examples/gate.json")
 
-    m = sub.add_parser("mcp", help="MCP stdio server (needs the mcp extra)")
+    m = sub.add_parser("mcp", help="MCP stdio server (needs the mcp package)")
     m.add_argument("--config", default="examples/gate.json")
     m.add_argument("--start-services", action="store_true",
                    help="run the supervisor once before serving")
@@ -84,7 +84,15 @@ def main(argv=None):
               cert=args.cert, key=args.key)
         return 0
     if args.cmd == "mcp":
-        from .mcp_server import run
+        try:
+            from .mcp_server import run
+        except ModuleNotFoundError as e:
+            if getattr(e, "name", None) != "mcp":
+                raise
+            # A harness shows this on stderr; a traceback here costs a debug cycle.
+            print("[eyewright] the 'mcp' package is missing: run `uv sync` "
+                  "(or `pip install 'eyewright[mcp]'`)", file=sys.stderr)
+            return 1
 
         run(cfg)
         return 0

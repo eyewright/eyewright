@@ -208,6 +208,13 @@ tray = [
     { name = "pystray" },
 ]
 
+[package.dev-dependencies]
+runtime = [
+    { name = "mcp" },
+    { name = "pillow" },
+    { name = "pystray" },
+]
+
 [package.metadata]
 requires-dist = [
     { name = "mcp", marker = "extra == 'mcp'", specifier = ">=2" },
@@ -215,6 +222,13 @@ requires-dist = [
     { name = "pystray", marker = "extra == 'tray'", specifier = ">=0.19" },
 ]
 provides-extras = ["mcp", "tray"]
+
+[package.metadata.requires-dev]
+runtime = [
+    { name = "mcp", specifier = ">=2" },
+    { name = "pillow", specifier = ">=10" },
+    { name = "pystray", specifier = ">=0.19" },
+]
 
 [[package]]
 name = "h11"

@@ -4,8 +4,8 @@ Tools:
   eyewright_gate(state, question)          -> three-eye gate: p_done + decision + trace
   eyewright_ask(state, question, choices?) -> typed decision (yes/no, or pick a choice)
 
-Run as a stdio MCP server: ``eyewright mcp`` (needs the ``mcp`` extra:
-``uv run --extra mcp eyewright mcp``).
+Run as a stdio MCP server: ``eyewright mcp`` (the ``mcp`` package is in the
+default ``runtime`` dependency group; published installs use ``eyewright[mcp]``).
 """
 
 from mcp.server.mcpserver import MCPServer

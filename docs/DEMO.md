@@ -18,7 +18,7 @@ command 2 (0:30), and `pip install` (1:15).
 ## Pre-flight (once, off-camera)
 - **Services up:** laya-serve `:8000` + Ollama `:11434`. Fastest: run one command
   with `--start-services`, or start the supervisor (`supervisor/svcwatch.py`).
-- `uv sync --extra mcp` so the venv is ready.
+- `uv sync` so the venv is ready (default `runtime` group: mcp + tray deps).
 - Terminal: 1080p, 16–18 pt font, dark theme, clean prompt, no scrollback noise.
 - **Dry-run** each command; note the real `decision`/`confidence` values.
 - Have the README bench table open as B-roll in case a live call is slow.

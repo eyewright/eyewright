@@ -2,6 +2,19 @@
 
 Notable changes to eyewright. Versions are the distribution version.
 
+## Unreleased
+
+- Project env: new default `runtime` dependency group (`mcp`, `pystray`, `pillow`).
+  `uv sync` is exact and prunes extras, so the venv kept losing the MCP package
+  that harnesses launch `.venv/Scripts/eyewright.exe` against — every sync now
+  installs it. Published installs still opt in (`eyewright[mcp]`, `eyewright[tray]`).
+- `eyewright mcp`: one-line, actionable message instead of a traceback when the
+  `mcp` package is missing.
+- `tests/mcp_smoke.py`: exercises the same bare `uv run eyewright mcp` launch path
+  the harnesses use, and asserts the tool set.
+- `supervisor/install.ps1`: the non-tray autostart branch wrote to an undefined
+  `$launcher` (never installed).
+
 ## 0.4.0 — 2026-10-12
 
 - `__version__` single-sourced from package metadata (no more drift).

@@ -60,8 +60,8 @@ $cmd = @(
     '@echo off',
     ('start "" "{0}" "{1}"' -f $py, $script)
 ) -join "`r`n"
-Set-Content -Path $launcher -Value $cmd -Encoding ASCII
-Write-Output "installed startup launcher: $launcher  (python: $py)"
+Set-Content -Path $cmdLauncher -Value $cmd -Encoding ASCII
+Write-Output "installed startup launcher: $cmdLauncher  (python: $py)"
 
 # start it now (detached, no console)
 Start-Process -FilePath $py -ArgumentList @($script) -WorkingDirectory $here -WindowStyle Hidden
