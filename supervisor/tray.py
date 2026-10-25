@@ -26,6 +26,13 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent
+VENV_SITE = ROOT / ".venv" / "Lib" / "site-packages"
+if VENV_SITE.is_dir():
+    # The venv's pythonw is console-subsystem (uv ships a copy of python.exe), so
+    # launching it from the Startup shortcut always allocates a terminal - hiding
+    # it after the fact is unreliable. Run with a GUI-subsystem pythonw instead;
+    # this keeps pystray/Pillow importable from the venv without a console.
+    sys.path.insert(0, str(VENV_SITE))
 sys.path.insert(0, str(ROOT))   # import eyewright from the source checkout
 sys.path.insert(0, str(HERE))   # import svcwatch
 
