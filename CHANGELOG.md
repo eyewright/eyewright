@@ -14,10 +14,12 @@ Notable changes to eyewright. Versions are the distribution version.
   the harnesses use, and asserts the tool set.
 - `supervisor/install.ps1`: the non-tray autostart branch wrote to an undefined
   `$launcher` (never installed).
-- `supervisor/`: logon no longer leaves stray terminals. The tray hides the
-  console its uv `pythonw` shim allocates (the venv shim is console-subsystem),
-  and service starts use `CREATE_NO_WINDOW` instead of `DETACHED_PROCESS`, so
-  `uv run` no longer opens a console for `laya-serve`.
+- `supervisor/`: logon no longer leaves stray terminals. Service starts use
+  `CREATE_NO_WINDOW` instead of `DETACHED_PROCESS`, so `uv run` no longer opens a
+  console for `laya-serve`. The tray runs under the base **GUI-subsystem**
+  `pythonw` (the venv's `pythonw.exe` is a copy of `python.exe`, i.e. console
+  subsystem) and prepends the venv's site-packages, so no console is allocated at
+  all; hiding it from inside was unreliable.
 
 ## 0.4.0 — 2026-10-12
 

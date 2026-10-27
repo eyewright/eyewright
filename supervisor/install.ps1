@@ -34,8 +34,13 @@ if ($Tray) {
     # One windowless process: tray + supervisor loop + Decide dialog.
     # A .lnk (not a .cmd) means no cmd.exe flash at logon.
     # Must use the project venv: pystray/pillow/eyewright live there, not in PATH python.
+    # uv's venv pythonw is a copy of python.exe (console subsystem), so it opens a
+    # terminal at logon. Prefer the base GUI pythonw; tray.py adds the venv's
+    # site-packages to sys.path, so pystray/Pillow still resolve.
     $venvPy = Join-Path (Split-Path -Parent $here) '.venv\Scripts\pythonw.exe'
-    if (Test-Path $venvPy) { $py = $venvPy }
+    $basePy = Get-ChildItem -Path (Join-Path $env:APPDATA 'uv\python\cpython-3.12-*\pythonw.exe') -ErrorAction SilentlyContinue |
+        Select-Object -First 1
+    if ($basePy) { $py = $basePy.FullName } elseif (Test-Path $venvPy) { $py = $venvPy }
     Remove-Item $cmdLauncher -ErrorAction SilentlyContinue
     $svcPid = Join-Path $here 'svcwatch.pid'
     if (Test-Path $svcPid) {

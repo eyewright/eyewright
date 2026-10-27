@@ -90,6 +90,12 @@ flash a console window. Replace it with a shortcut that has no `cmd.exe`:
 
 (or a hidden scheduled task). The tray is `pythonw`, so it stays windowless.
 
+**Caveat (2026-10-27):** the *venv's* `pythonw.exe` is a byte-identical copy of
+`python.exe` — console subsystem — so pointing the shortcut at
+`.venv\Scripts\pythonw.exe` still produces a terminal. Point it at the base uv
+`pythonw.exe` instead; `tray.py` prepends the venv's site-packages itself. Check
+a candidate with the PE subsystem byte (`2` = GUI, `3` = console).
+
 ## Gotchas
 
 - **Threading (the main wrinkle).** pystray runs its menu callbacks on its own
