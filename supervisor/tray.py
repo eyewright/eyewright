@@ -80,6 +80,18 @@ def _excepthook(exc, val, tb) -> None:
     log("".join(traceback.format_exception(exc, val, tb)))
 
 
+def _title(health: dict) -> str:
+    """Tray tooltip: 'eyewright - ready', or which service is down.
+
+    The tooltip is the only thing a user reads without opening a window, so it
+    says 'ready' rather than listing services that are up.
+    """
+    down = [n for n, v in health.items() if not v]
+    if down:
+        return "eyewright - " + ", ".join(down) + " down"
+    return "eyewright - " + ("ready" if health else "no services")
+
+
 def build_state(text: str, files, folders) -> str:
     """Assemble the state string: free text + text files + folder listings.
 
@@ -128,16 +140,20 @@ def decide(text, files, folders, question, engine):
     return ask(cfg, state, question, engine=engine)
 
 
+SCLERA = "#e6edf3"
+
+
 def _eye(color: str):
-    """Tray icon: an eye with a dark pupil, filled with the health colour.
+    """Tray icon: a white eye whose **iris** carries the health colour.
 
-    Drawn instead of shipped as a PNG so the health colour *is* the icon (green =
-    all services up, amber = one is down) and there is no asset to keep in sync.
+    Matches the convention around it: tray icons are light glyphs with one small
+    saturated accent (the blue dot on the hand, the red dot on the sync, the amber
+    triangle on the shield). Filling the whole almond put the colour on ~4x more
+    area than any neighbour and read as a green blob at 16 px.
 
-    The tray renders at 16 px (``SM_CXSMICON`` at 96 DPI), so the almond fills the
-    canvas (31x26 of 64, pupil r=11) to match the visual weight of its neighbours,
-    and the whole thing is drawn at 4x and downsampled — Windows does not
-    anti-alias a 64 px source on the way down to 16.
+    Drawn instead of shipped as a PNG so the health colour *is* the icon, and at
+    4x then downsampled because Windows does not anti-alias a 64 px source on the
+    way down to the 16 px tray size (``SM_CXSMICON`` at 96 DPI).
     """
     import math
 
@@ -145,13 +161,13 @@ def _eye(color: str):
 
     s, n = 4, 64  # supersample factor, arc segments
     c = 64 * s / 2
-    w, h, r = 31 * s, 26 * s, 11 * s
+    w, h, r = 31 * s, 20 * s, 10 * s
     upper = [(c - w + 2 * w * i / n, c - h * math.sin(math.pi * i / n)) for i in range(n + 1)]
     lower = [(c - w + 2 * w * i / n, c + h * math.sin(math.pi * i / n)) for i in range(n - 1, 0, -1)]
     img = Image.new("RGBA", (64 * s, 64 * s), (0, 0, 0, 0))
     d = ImageDraw.Draw(img)
-    d.polygon(upper + lower, fill=color)
-    d.ellipse((c - r, c - r, c + r, c + r), fill="#0d1117")
+    d.polygon(upper + lower, fill=SCLERA)
+    d.ellipse((c - r, c - r, c + r, c + r), fill=color)
     return img.resize((64, 64), Image.LANCZOS)
 
 
@@ -192,10 +208,7 @@ class App:
                 h = self.health()
                 ok = all(h.values()) if h else True
                 self.icon.icon = _eye("#3fb950" if ok else "#d29922")
-                self.icon.title = "eyewright - " + (
-                    ", ".join(f"{n}:{'up' if v else 'DOWN'}" for n, v in h.items())
-                    or "no services enabled"
-                )
+                self.icon.title = _title(h)
             except Exception:
                 log(traceback.format_exc())
             self.stop.wait(15)
@@ -402,10 +415,14 @@ def check() -> int:
 
     up, down = _eye("#3fb950"), _eye("#d29922")
     assert up.size == (64, 64)
-    assert up.getpixel((2, 2))[3] == 0                 # transparent corner, not a square
-    assert up.getpixel((32, 32)) == (13, 17, 23, 255)  # dark pupil
-    assert up.getpixel((16, 32))[:3] == (63, 185, 80)  # health colour fills the eye
-    assert down.getpixel((16, 32))[:3] == (210, 153, 34)
+    assert up.getpixel((2, 2))[3] == 0                  # transparent corner, not a square
+    assert up.getpixel((32, 32))[:3] == (63, 185, 80)    # iris carries the health colour
+    assert up.getpixel((13, 32))[:3] == (230, 237, 243)  # sclera is the light glyph
+    assert down.getpixel((32, 32))[:3] == (210, 153, 34)
+
+    assert _title({"laya-serve": True}) == "eyewright - ready"
+    assert _title({"laya-serve": False, "ollama": True}) == "eyewright - laya-serve down"
+    assert _title({}) == "eyewright - no services"
 
     print(
         f"ok: state assembly + configs ({CONFIG.name}, {SERVICES.name}) + tray eye; "
