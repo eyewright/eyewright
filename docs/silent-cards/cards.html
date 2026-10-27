@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>eyewright — silent use-case cards</title>
+<style>
+  :root { --bg:#0d1117; --panel:#161b22; --line:#30363d; --fg:#e6edf3; --dim:#8b949e;
+          --green:#3fb950; --blue:#58a6ff; --amber:#d29922; }
+  * { box-sizing:border-box; }
+  html,body { margin:0; background:#000; }
+  .card {
+    width:1600px; height:900px; display:none; flex-direction:column;
+    padding:74px 90px; background:var(--bg); color:var(--fg);
+    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    overflow:hidden; position:relative;
+  }
+  .brand { font: 800 24px/1 ui-monospace, Consolas, monospace; letter-spacing:.04em; color:var(--dim); }
+  .brand b { color:var(--fg); }
+  .kick { margin-top:54px; font: 800 20px/1 ui-monospace, Consolas, monospace;
+          letter-spacing:.18em; color:var(--blue); }
+  h1 { font-size:86px; line-height:1.02; letter-spacing:-.03em; margin:18px 0 0; font-weight:800; }
+  .cap { margin-top:26px; font-size:31px; line-height:1.35; color:var(--dim); max-width:1180px; }
+  .cap b { color:var(--fg); font-weight:650; }
+  .win { margin-top:44px; background:var(--panel); border:1px solid var(--line);
+         border-radius:14px; padding:26px 30px; font: 22px/1.55 ui-monospace, Consolas, monospace;
+         white-space:pre-wrap; color:#c9d1d9; }
+  .win .p { color:var(--green); } .win .k { color:var(--blue); } .win .n { color:var(--amber); }
+  .row { display:flex; gap:34px; margin-top:44px; align-items:stretch; }
+  .tile { flex:1; background:var(--panel); border:1px solid var(--line); border-radius:14px;
+          padding:26px; font: 22px/1.4 ui-monospace, Consolas, monospace; }
+  .tile .t { color:var(--fg); } .tile .d { color:var(--dim); font-size:19px; margin-top:8px; }
+  table { margin-top:40px; border-collapse:collapse; font: 26px/1.5 ui-monospace, Consolas, monospace; }
+  th,td { padding:12px 30px; border-bottom:1px solid var(--line); text-align:left; }
+  th { color:var(--dim); font-size:20px; letter-spacing:.1em; font-weight:700; }
+  .big { font-size:104px; font-weight:800; letter-spacing:-.03em; margin-top:10px; }
+  .big span { color:var(--green); }
+  .foot { margin-top:auto; font: 20px/1 ui-monospace, Consolas, monospace; color:var(--dim); }
+</style>
+</head>
+<body>
+
+<section class="card" id="c1">
+  <div class="brand"><b>eyewright</b> · the third-eye gate</div>
+  <div class="kick">01 · GATE A PULL REQUEST</div>
+  <h1>Accept, reject, or review.</h1>
+  <div class="cap">Stop hardcoding the decide step as a magic number. Ask a <b>typed gate</b>.</div>
+  <div class="win">$ eyewright gate --question "Is this change safe to merge?"
+{ <span class="k">"p_done"</span>: 0.83,
+  <span class="k">"decision"</span>: <span class="p">"consensus-accept"</span>,
+  <span class="k">"trace"</span>: { "consults": { "tev1:4b": 0.91, "laya-multilingual": 0.88 } } }</div>
+  <div class="foot">github.com/eyewright/eyewright</div>
+</section>
+
+<section class="card" id="c2">
+  <div class="brand"><b>eyewright</b> · the third-eye gate</div>
+  <div class="kick">02 · ANY TYPED DECISION</div>
+  <h1>Yes / no. Choices. Scales.</h1>
+  <div class="cap">One call for every decide step — not just a boolean.</div>
+  <div class="win">$ eyewright ask --question "Which action?" --choices '{"optimize":"…","review":"…","ship":"…"}'
+{ <span class="k">"kind"</span>: "choice", <span class="k">"answer"</span>: <span class="p">"optimize"</span>, <span class="k">"confidence"</span>: 0.94 }</div>
+  <div class="foot">github.com/eyewright/eyewright</div>
+</section>
+
+<section class="card" id="c3">
+  <div class="brand"><b>eyewright</b> · the third-eye gate</div>
+  <div class="kick">03 · ANY HARNESS</div>
+  <h1>MCP tools, in-loop.</h1>
+  <div class="cap">Any agent — OpenCode, Cursor, Claude — can call the gate.</div>
+  <div class="win"><span class="k">eyewright_gate</span>(state, question)          → p_done + decision + trace
+<span class="k">eyewright_ask</span>(state, question, choices?) → answer + confidence</div>
+  <div class="row">
+    <div class="tile"><div class="t">stdio MCP</div><div class="d">one line in the harness config</div></div>
+    <div class="tile"><div class="t">HTTP</div><div class="d">/v1/gate · /v1/ask</div></div>
+    <div class="tile"><div class="t">CLI</div><div class="d">gate · ask · serve · mcp</div></div>
+  </div>
+  <div class="foot">github.com/eyewright/eyewright</div>
+</section>
+
+<section class="card" id="c4">
+  <div class="brand"><b>eyewright</b> · the third-eye gate</div>
+  <div class="kick">04 · ONE CLICK</div>
+  <h1>Or from the tray.</h1>
+  <div class="cap">No terminal needed: click the icon, drop a file, get the same decision.</div>
+  <div class="row">
+    <div class="tile"><div class="t">◉ tray icon</div><div class="d">green = services healthy</div></div>
+    <div class="tile"><div class="t">Decide</div><div class="d">drop a file · ask a question</div></div>
+    <div class="tile"><div class="t">result</div><div class="d">decision + confidence</div></div>
+  </div>
+  <div class="foot">github.com/eyewright/eyewright</div>
+</section>
+
+<section class="card" id="c5">
+  <div class="brand"><b>eyewright</b> · the third-eye gate</div>
+  <div class="kick">05 · LOCAL-FIRST</div>
+  <h1>Nothing leaves the machine.</h1>
+  <div class="cap">A local specialist is the main eye; two more consult when unsure. All on <b>localhost</b>.</div>
+  <div class="win">laya-serve  :8000   ← main eye (typed decisions)
+Ollama      :11434  ← consult (tev1:4b)
+            :11434  ← consult (laya-multilingual)</div>
+  <div class="cap">A cloud eye is opt-in — and labeled. <b>ZDR</b> is routing, not encryption.</div>
+  <div class="foot">github.com/eyewright/eyewright</div>
+</section>
+
+<section class="card" id="c6">
+  <div class="brand"><b>eyewright</b> · the third-eye gate</div>
+  <div class="kick">06 · BENCH</div>
+  <h1>Measured, not vibes.</h1>
+  <div class="big"><span>23.7%</span> acted · 90.8% accurate</div>
+  <table>
+    <tr><th>GATE</th><th>ACTED</th><th>ACCURACY</th></tr>
+    <tr><td>local default</td><td>23.7%</td><td>90.8%</td></tr>
+    <tr><td>+ local System-2</td><td>34.3%</td><td>94.7%</td></tr>
+    <tr><td>cloud consult</td><td>10.0%</td><td>100%</td></tr>
+  </table>
+  <div class="foot">600-decision bench · github.com/eyewright/eyewright</div>
+</section>
+
+<script>
+  const id = (location.hash || "#c1").slice(1);
+  document.querySelectorAll(".card").forEach(c => { c.style.display = (c.id === id) ? "flex" : "none"; });
+  document.title = "eyewright silent " + id;
+</script>
+</body>
+</html>
