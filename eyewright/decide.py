@@ -134,7 +134,7 @@ def ask(cfg, state, question, choices=None, levels=None, engine=None, qid="q"):
         "kind": kind,
         "answer": answer,
         "confidence": round(float(conf), 4) if conf is not None else None,
-        "probabilities": probs,
+        "probabilities": {k: round(float(v), 4) for k, v in probs.items()},
         "model": resp.get("model"),
         "trace": {"engine": entry.get("name") or entry.get("model") or entry.get("type")},
     }
