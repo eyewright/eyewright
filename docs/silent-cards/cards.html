@@ -44,10 +44,13 @@
   <div class="kick">01 · GATE A PULL REQUEST</div>
   <h1>Accept, reject, or review.</h1>
   <div class="cap">Stop hardcoding the decide step as a magic number. Ask a <b>typed gate</b>.</div>
-  <div class="win">$ eyewright gate --question "Is this change safe to merge?"
-{ <span class="k">"p_done"</span>: 0.83,
-  <span class="k">"decision"</span>: <span class="p">"consensus-accept"</span>,
-  <span class="k">"trace"</span>: { "consults": { "tev1:4b": 0.91, "laya-multilingual": 0.88 } } }</div>
+  <div class="win">$ eyewright gate --question "Safe to merge?"
+  state: "412 tests pass; CI green; 4-line diff; 2 approvals."
+{ <span class="k">"p_done"</span>: 0.9489, <span class="k">"decision"</span>: <span class="p">"accept"</span> }
+
+  state: "adds a retry loop; no test for the retry path."
+{ <span class="k">"p_done"</span>: 0.6082, <span class="k">"decision"</span>: <span class="n">"review-no-signal"</span>,
+  <span class="k">"trace"</span>: { "consults": { "laya-td": 0.2211 } } }</div>
   <div class="foot">github.com/eyewright/eyewright</div>
 </section>
 
@@ -82,7 +85,7 @@
   <h1>Or from the tray.</h1>
   <div class="cap">No terminal needed: click the icon, drop a file, get the same decision.</div>
   <div class="row">
-    <div class="tile"><div class="t">◉ tray icon</div><div class="d">green = services healthy</div></div>
+    <div class="tile"><div class="t"><svg width="26" height="26" viewBox="0 0 64 64" style="vertical-align:-4px"><path d="M5 32 Q32 7 59 32 Q32 57 5 32 Z" fill="#3fb950"/><circle cx="32" cy="32" r="8" fill="#0d1117"/></svg> tray icon</div><div class="d">an eye · green = services healthy</div></div>
     <div class="tile"><div class="t">Decide</div><div class="d">drop a file · ask a question</div></div>
     <div class="tile"><div class="t">result</div><div class="d">decision + confidence</div></div>
   </div>
@@ -95,8 +98,8 @@
   <h1>Nothing leaves the machine.</h1>
   <div class="cap">A local specialist is the main eye; two more consult when unsure. All on <b>localhost</b>.</div>
   <div class="win">laya-serve  :8000   ← main eye (typed decisions)
-Ollama      :11434  ← consult (tev1:4b)
-            :11434  ← consult (laya-multilingual)</div>
+Ollama      :11434  ← primary (tev1:4b)
+laya-serve  :8000   ← consult (multilingual)</div>
   <div class="cap">A cloud eye is opt-in — and labeled. <b>ZDR</b> is routing, not encryption.</div>
   <div class="foot">github.com/eyewright/eyewright</div>
 </section>
