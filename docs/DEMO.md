@@ -1,5 +1,10 @@
 # The 90-second eyewright demo
 
+> **The video is generated, not screen-recorded.** `docs/demo/eyewright-demo.mp4`
+> comes from `docs/demo/eyewright-demo.tape` — re-render it with
+> `docs/demo/render.ps1` instead of recording. This file is the **beat and
+> voiceover script**: the timings below are for narration, not for capture.
+
 Recording script. Target **90 s**. Everything runs **locally** on the recorder's
 machine. Numbers below are the shapes to show; **dry-run every command off-camera**
 and keep the real output for the take.

@@ -5,7 +5,7 @@ Set Height 1440
 Set Padding 28
 Set Theme "Dracula"
 Set Shell "bash"
-Set TypingSpeed 15ms
+Set TypingSpeed 12ms
 
 # Hidden setup: PATH for the ttyd shell, and a fresh install line on camera.
 Hide
@@ -15,7 +15,7 @@ Sleep 500ms
 Show
 
 # Title
-Type "clear; echo 'eyewright - typed decisions for agent loops'"
+Type `clear; echo; echo '  eyewright - typed decisions from small local models'; echo`
 Enter
 Sleep 2s
 
@@ -24,19 +24,25 @@ Type "uv tool install eyewright"
 Enter
 Sleep 4s
 
-# Gate: accept / reject / review
-Type `eyewright gate --config docs/demo/gate.json --state "login flow changed; unit tests pass, no integration test" --question "Is this safe to merge?"`
+# 1. It knows: one call, confident accept
+Type `eyewright gate --config docs/demo/gate.json --state "412 tests pass; CI green; 4-line diff; 2 approvals." --question "Safe to merge?"`
 Enter
-Wait+Screen /"decision"/
-Sleep 3s
+Wait+Screen /"accept"/
+Sleep 2500ms
 
-# One call, any typed decision
-Type `eyewright ask --config docs/demo/gate.json --state "p95 latency = 480 ms; the budget is 200 ms" --question "Which action?" --choices '{"optimize":"optimize the hot path","review":"gather more data","ship":"ship anyway"}'`
+# 2. It doesn't know: primary is unsure, so a second eye is consulted
+Type `eyewright gate --config docs/demo/gate.json --state "Adds a retry loop around the API call; tests pass; no test for the retry path." --question "Safe to merge?"`
+Enter
+Wait+Screen /"review-no-signal"/
+Sleep 2500ms
+
+# 3. Any typed decision: not just yes/no
+Type `eyewright ask --config docs/demo/gate.json --state "p95 latency = 480 ms; the budget is 200 ms." --question "Which action?" --choices '{"optimize":"optimize the hot path","review":"gather more data","ship":"ship anyway"}'`
 Enter
 Wait+Screen /"confidence"/
-Sleep 3s
+Sleep 2500ms
 
 # Closer
-Type "clear; echo 'pip install eyewright'; echo 'github.com/eyewright/eyewright'"
+Type `clear; echo; echo '  pip install eyewright'; echo '  github.com/eyewright/eyewright'; echo`
 Enter
-Sleep 3s
+Sleep 2500ms
