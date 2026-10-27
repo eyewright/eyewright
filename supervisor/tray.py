@@ -128,12 +128,25 @@ def decide(text, files, folders, question, engine):
     return ask(cfg, state, question, engine=engine)
 
 
-def _dot(color: str):
+def _eye(color: str):
+    """Tray icon: an eye with a dark pupil, filled with the health colour.
+
+    Drawn instead of shipped as a PNG so the health colour *is* the icon (green =
+    all services up, amber = one is down) and there is no asset to keep in sync.
+    The almond is two mirrored sine arcs, so it stays an eye at 16 px.
+    """
+    import math
+
     from PIL import Image, ImageDraw
 
     img = Image.new("RGBA", (64, 64), (0, 0, 0, 0))
     d = ImageDraw.Draw(img)
-    d.ellipse((6, 6, 58, 58), fill=color, outline="#30363d", width=3)
+    cx = cy = 32.0
+    w, h, n = 27.0, 16.0, 40
+    upper = [(cx - w + 2 * w * i / n, cy - h * math.sin(math.pi * i / n)) for i in range(n + 1)]
+    lower = [(cx - w + 2 * w * i / n, cy + h * math.sin(math.pi * i / n)) for i in range(n - 1, 0, -1)]
+    d.polygon(upper + lower, fill=color)
+    d.ellipse((cx - 8, cy - 8, cx + 8, cy + 8), fill="#0d1117")
     return img
 
 
@@ -173,7 +186,7 @@ class App:
             try:
                 h = self.health()
                 ok = all(h.values()) if h else True
-                self.icon.icon = _dot("#3fb950" if ok else "#d29922")
+                self.icon.icon = _eye("#3fb950" if ok else "#d29922")
                 self.icon.title = "eyewright - " + (
                     ", ".join(f"{n}:{'up' if v else 'DOWN'}" for n, v in h.items())
                     or "no services enabled"
@@ -381,8 +394,16 @@ def check() -> int:
     services = json.loads(SERVICES.read_text(encoding="utf-8"))
     assert gate.get("primary") and gate.get("generative", {}).get("model")
     assert services.get("services")
+
+    up, down = _eye("#3fb950"), _eye("#d29922")
+    assert up.size == (64, 64)
+    assert up.getpixel((2, 2))[3] == 0                 # transparent corner, not a square
+    assert up.getpixel((32, 32)) == (13, 17, 23, 255)  # dark pupil
+    assert up.getpixel((16, 32))[:3] == (63, 185, 80)  # health colour fills the eye
+    assert down.getpixel((16, 32))[:3] == (210, 153, 34)
+
     print(
-        f"ok: state assembly + configs ({CONFIG.name}, {SERVICES.name}); "
+        f"ok: state assembly + configs ({CONFIG.name}, {SERVICES.name}) + tray eye; "
         f"generative={gate['generative']['model']}"
     )
     return 0
@@ -404,7 +425,7 @@ def main() -> int:
     services = json.loads(SERVICES.read_text(encoding="utf-8"))
     root = tk.Tk()
     root.withdraw()
-    icon = pystray.Icon("eyewright", _dot("#8b949e"), "eyewright", _menu())
+    icon = pystray.Icon("eyewright", _eye("#8b949e"), "eyewright", _menu())
     app = App(root, services, icon)
 
     app.start_supervisor()

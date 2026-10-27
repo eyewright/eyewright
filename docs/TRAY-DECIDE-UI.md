@@ -32,8 +32,9 @@ One windowless process (`pythonw.exe`) that:
 
 1. **Runs the supervisor loop** in a background thread (same as svcwatch), or is a
    thin client of a separately-started svcwatch — see Open questions.
-2. **Shows a tray icon** (`pystray` + `Pillow`): green = all services healthy,
-   grey = one down. Menu: *Status · Start services · Open log · Decide… · Quit*.
+2. **Shows a tray icon** (`pystray` + `Pillow`): an **eye**, drawn with the health
+   colour — green = all services healthy, amber = one down. Menu: *Status · Start
+   services · Open log · Decide… · Quit*.
 3. **Opens a "Decide" window** (Tkinter) on *Decide…*:
    - **Add files…** (multi-select) and **Add folder…**; entries listed with a remove
      button.
