@@ -1,11 +1,17 @@
 {
-  "primary": { "name": "tev1", "type": "systemone-ollama", "model": "tev1:4b" },
+  "primary": {
+    "name": "laya-td",
+    "type": "systemone-http",
+    "url": "http://127.0.0.1:8000/v1/systemone",
+    "model": "typed-decisions"
+  },
   "consults": [
+    { "name": "tev1:4b", "type": "systemone-ollama", "model": "tev1:4b" },
     {
-      "name": "laya-td",
+      "name": "laya-multilingual",
       "type": "systemone-http",
       "url": "http://127.0.0.1:8000/v1/systemone",
-      "model": "typed-decisions"
+      "model": "multilingual"
     }
   ],
   "accept_threshold": 0.75,
@@ -15,5 +21,11 @@
   "attempts": 2,
   "retry_backoff_s": 0.5,
   "timeout_s": 60,
-  "on_primary_unavailable": "fallback"
+  "on_primary_unavailable": "fallback",
+  "generative": {
+    "type": "ollama",
+    "model": "gemma4:12b",
+    "options": { "temperature": 0, "num_predict": 200 },
+    "think": false
+  }
 }

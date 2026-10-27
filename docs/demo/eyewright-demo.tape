@@ -24,25 +24,22 @@ Type "uv tool install eyewright"
 Enter
 Sleep 4s
 
-# 1. It knows: one call, confident accept
-Type `eyewright gate --config docs/demo/gate.json --state "412 tests pass; CI green; 4-line diff; 2 approvals." --question "Safe to merge?"`
+# 1. The committee carries a wavering primary: 0.67 -> two more eyes agree -> accept.
+Type `eyewright gate --config docs/demo/gate.json --state "Done: all requested changes are implemented, tests pass, and the PR is merged." --question "Is the task done?"`
 Enter
-Wait+Screen /"accept"/
-Sleep 2500ms
+Wait+Screen /"consensus-accept"/
+Sleep 5s
 
-# 2. It doesn't know: primary is unsure, so a second eye is consulted
-Type `eyewright gate --config docs/demo/gate.json --state "Adds a retry loop around the API call; tests pass; no test for the retry path." --question "Safe to merge?"`
+# 2. Clearly not done: the primary is sure, so no consult is wasted.
+Type `eyewright gate --config docs/demo/gate.json --state "Adds a retry loop around the API call; tests pass; no test for the retry path." --question "Is the task done?"`
 Enter
-Wait+Screen /"review-no-signal"/
-Sleep 2500ms
+Wait+Screen /"review-low"/
+Sleep 4s
 
-# 3. Any typed decision: not just yes/no
-Type `eyewright ask --config docs/demo/gate.json --state "p95 latency = 480 ms; the budget is 200 ms." --question "Which action?" --choices '{"optimize":"optimize the hot path","review":"gather more data","ship":"ship anyway"}'`
-Enter
-Wait+Screen /"confidence"/
-Sleep 2500ms
-
-# Closer
+# Closer: one clean cut to the end card, not a long command typed on camera.
+Hide
 Type `clear; printf '\n%.0s' {1..18}; echo '  pip install eyewright'; echo '  github.com/eyewright/eyewright'; echo; echo '  local-first - typed decisions - CLI + MCP'`
 Enter
-Sleep 3s
+Sleep 800ms
+Show
+Sleep 3500ms
