@@ -133,21 +133,26 @@ def _eye(color: str):
 
     Drawn instead of shipped as a PNG so the health colour *is* the icon (green =
     all services up, amber = one is down) and there is no asset to keep in sync.
-    The almond is two mirrored sine arcs, so it stays an eye at 16 px.
+
+    The tray renders at 16 px (``SM_CXSMICON`` at 96 DPI), so the almond fills the
+    canvas (31x26 of 64, pupil r=11) to match the visual weight of its neighbours,
+    and the whole thing is drawn at 4x and downsampled — Windows does not
+    anti-alias a 64 px source on the way down to 16.
     """
     import math
 
     from PIL import Image, ImageDraw
 
-    img = Image.new("RGBA", (64, 64), (0, 0, 0, 0))
+    s, n = 4, 64  # supersample factor, arc segments
+    c = 64 * s / 2
+    w, h, r = 31 * s, 26 * s, 11 * s
+    upper = [(c - w + 2 * w * i / n, c - h * math.sin(math.pi * i / n)) for i in range(n + 1)]
+    lower = [(c - w + 2 * w * i / n, c + h * math.sin(math.pi * i / n)) for i in range(n - 1, 0, -1)]
+    img = Image.new("RGBA", (64 * s, 64 * s), (0, 0, 0, 0))
     d = ImageDraw.Draw(img)
-    cx = cy = 32.0
-    w, h, n = 27.0, 16.0, 40
-    upper = [(cx - w + 2 * w * i / n, cy - h * math.sin(math.pi * i / n)) for i in range(n + 1)]
-    lower = [(cx - w + 2 * w * i / n, cy + h * math.sin(math.pi * i / n)) for i in range(n - 1, 0, -1)]
     d.polygon(upper + lower, fill=color)
-    d.ellipse((cx - 8, cy - 8, cx + 8, cy + 8), fill="#0d1117")
-    return img
+    d.ellipse((c - r, c - r, c + r, c + r), fill="#0d1117")
+    return img.resize((64, 64), Image.LANCZOS)
 
 
 class App:
