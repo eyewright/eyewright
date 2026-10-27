@@ -80,6 +80,22 @@ On screen: the install line + the repo URL.
 - **laya-serve down:** re-run with `--start-services`.
 - **Any error on camera:** cut the take; re-record. Never narrate a number the screen doesn't show.
 
+## Bonus (optional) — the tray, ~15 s (separate clip)
+The tray is a **desktop UI**, so this needs **Display Capture** (or a separate
+recording) — terminal Window Capture will not show it. Service must be running.
+
+1. Cursor over the tray icon → tooltip / green "services healthy".
+2. Click → the **Decide** window opens.
+3. Drop a file (or type a question) → click **Decide**.
+4. Result appears (decision + confidence).
+5. Cut.
+
+Optional narration: *"Or skip the terminal — click the tray icon, drop in a file,
+get the same decision."*
+
+Install: `pwsh -File supervisor/install.ps1 -Tray` · self-check:
+`python supervisor/tray.py --check` · docs: `docs/TRAY-DECIDE-UI.md`.
+
 ## Post
 - Trim to ≤ 90 s, add captions, 1080p.
 - Upload; add the link to the README; use it in the launch post.
