@@ -43,6 +43,6 @@ Wait+Screen /"confidence"/
 Sleep 2500ms
 
 # Closer
-Type `clear; echo; echo '  pip install eyewright'; echo '  github.com/eyewright/eyewright'; echo`
+Type `clear; printf '\n%.0s' {1..18}; echo '  pip install eyewright'; echo '  github.com/eyewright/eyewright'; echo; echo '  local-first - typed decisions - CLI + MCP'`
 Enter
-Sleep 2500ms
+Sleep 3s
