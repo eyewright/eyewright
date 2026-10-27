@@ -140,16 +140,40 @@ def decide(text, files, folders, question, engine):
     return ask(cfg, state, question, engine=engine)
 
 
-SCLERA = "#e6edf3"
+# The tray sits on the taskbar, whose theme is `SystemUsesLightTheme` — light
+# glyphs on a dark bar, dark glyphs on a light one.
+SCLERA_ON_DARK = "#e6edf3"
+SCLERA_ON_LIGHT = "#1f2328"
 
 
-def _eye(color: str):
-    """Tray icon: a white eye whose **iris** carries the health colour.
+def _sclera() -> str:
+    """Glyph tone for the current taskbar theme (re-read every health poll)."""
+    if os.name != "nt":
+        return SCLERA_ON_DARK
+    try:
+        import winreg
 
-    Matches the convention around it: tray icons are light glyphs with one small
-    saturated accent (the blue dot on the hand, the red dot on the sync, the amber
-    triangle on the shield). Filling the whole almond put the colour on ~4x more
-    area than any neighbour and read as a green blob at 16 px.
+        with winreg.OpenKey(
+            winreg.HKEY_CURRENT_USER,
+            r"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize",
+        ) as k:
+            light, _ = winreg.QueryValueEx(k, "SystemUsesLightTheme")
+        return SCLERA_ON_LIGHT if light else SCLERA_ON_DARK
+    except Exception:
+        return SCLERA_ON_DARK
+
+
+def _eye(color: str, sclera: str = SCLERA_ON_DARK):
+    """Tray icon: an eye outlined and irised in the health colour.
+
+    Tray icons here are light glyphs, so the sclera stays the theme's glyph tone
+    and the health colour goes on the **outline and iris**. An iris alone was a
+    ~5 px dot at 16 px and the colour was unreadable; the outline restores enough
+    coloured area without filling the whole almond (which read as a green blob
+    and put colour on ~4x more area than any neighbour).
+
+    Eyelashes were tested and dropped: at 16 px three strokes over the lid read
+    as antennae.
 
     Drawn instead of shipped as a PNG so the health colour *is* the icon, and at
     4x then downsampled because Windows does not anti-alias a 64 px source on the
@@ -161,12 +185,12 @@ def _eye(color: str):
 
     s, n = 4, 64  # supersample factor, arc segments
     c = 64 * s / 2
-    w, h, r = 31 * s, 20 * s, 10 * s
+    w, h, r = 31 * s, 20 * s, 12 * s
     upper = [(c - w + 2 * w * i / n, c - h * math.sin(math.pi * i / n)) for i in range(n + 1)]
     lower = [(c - w + 2 * w * i / n, c + h * math.sin(math.pi * i / n)) for i in range(n - 1, 0, -1)]
     img = Image.new("RGBA", (64 * s, 64 * s), (0, 0, 0, 0))
     d = ImageDraw.Draw(img)
-    d.polygon(upper + lower, fill=SCLERA)
+    d.polygon(upper + lower, fill=sclera, outline=color, width=4 * s)
     d.ellipse((c - r, c - r, c + r, c + r), fill=color)
     return img.resize((64, 64), Image.LANCZOS)
 
@@ -207,7 +231,7 @@ class App:
             try:
                 h = self.health()
                 ok = all(h.values()) if h else True
-                self.icon.icon = _eye("#3fb950" if ok else "#d29922")
+                self.icon.icon = _eye("#3fb950" if ok else "#d29922", _sclera())
                 self.icon.title = _title(h)
             except Exception:
                 log(traceback.format_exc())
@@ -413,12 +437,20 @@ def check() -> int:
     assert gate.get("primary") and gate.get("generative", {}).get("model")
     assert services.get("services")
 
+    def near(px, rgb, tol=4):
+        return all(abs(a - b) <= tol for a, b in zip(px[:3], rgb))
+
     up, down = _eye("#3fb950"), _eye("#d29922")
     assert up.size == (64, 64)
     assert up.getpixel((2, 2))[3] == 0                  # transparent corner, not a square
     assert up.getpixel((32, 32))[:3] == (63, 185, 80)    # iris carries the health colour
-    assert up.getpixel((13, 32))[:3] == (230, 237, 243)  # sclera is the light glyph
+    assert near(up.getpixel((4, 32)), (63, 185, 80))     # so does the outline
+    assert up.getpixel((13, 32))[:3] == (230, 237, 243)  # sclera on a dark taskbar
     assert down.getpixel((32, 32))[:3] == (210, 153, 34)
+
+    # Theme switch: on a light taskbar the glyph must go dark, or it vanishes.
+    assert near(_eye("#3fb950", SCLERA_ON_LIGHT).getpixel((13, 32)), (31, 35, 40))
+    assert _sclera() in (SCLERA_ON_DARK, SCLERA_ON_LIGHT)
 
     assert _title({"laya-serve": True}) == "eyewright - ready"
     assert _title({"laya-serve": False, "ollama": True}) == "eyewright - laya-serve down"
@@ -447,7 +479,7 @@ def main() -> int:
     services = json.loads(SERVICES.read_text(encoding="utf-8"))
     root = tk.Tk()
     root.withdraw()
-    icon = pystray.Icon("eyewright", _eye("#8b949e"), "eyewright", _menu())
+    icon = pystray.Icon("eyewright", _eye("#8b949e", _sclera()), "eyewright", _menu())
     app = App(root, services, icon)
 
     app.start_supervisor()
