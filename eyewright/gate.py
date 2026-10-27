@@ -21,6 +21,7 @@ import os
 import time
 import urllib.request
 from pathlib import Path
+from urllib.parse import urlparse
 
 DEFAULT_TIMEOUT_S = 120  # per-eye request timeout; override with cfg "timeout_s"
 
@@ -30,6 +31,44 @@ def _post_json(url, payload, timeout=DEFAULT_TIMEOUT_S):
     req = urllib.request.Request(url, data=data, headers={"Content-Type": "application/json"})
     with urllib.request.urlopen(req, timeout=timeout) as r:
         return json.loads(r.read().decode())
+
+
+LOOPBACK_HOSTS = {"127.0.0.1", "::1", "localhost"}
+OPENROUTER_HOSTS = {"openrouter.ai", "www.openrouter.ai"}
+
+# Credential files never read as an API key, even if a config names them. This is
+# the config-triggered exfiltration guard (#13): a poisoned config could point
+# `key_file` at a private key and `url` at an attacker.
+_SENSITIVE_DIR_MARKERS = (
+    "/.ssh/", "/.aws/", "/.gnupg/", "/.config/gcloud/", "/.azure/", "/.kube/",
+)
+_SENSITIVE_NAMES = {
+    "id_rsa", "id_ed25519", "id_ecdsa", "id_dsa", "credentials",
+    ".netrc", ".npmrc", ".pypirc", ".env", ".git-credentials", ".htpasswd",
+}
+
+
+def _host_of(url):
+    try:
+        return (urlparse(url).hostname or "").lower()
+    except Exception:
+        return ""
+
+
+def _is_sensitive_key_path(p):
+    s = str(p.resolve()).lower().replace("\\", "/")
+    if any(m in s for m in _SENSITIVE_DIR_MARKERS):
+        return True
+    return p.name.lower() in _SENSITIVE_NAMES
+
+
+def _require_loopback(url, allow_remote=False):
+    host = _host_of(url)
+    if not allow_remote and host not in LOOPBACK_HOSTS:
+        raise ValueError(
+            f"refusing to send state to non-loopback host {host!r}; "
+            'set "allow_remote": true on the entry to opt in'
+        )
 
 
 def load_key(path):
@@ -43,6 +82,8 @@ def load_key(path):
     p = Path(os.path.expanduser(os.path.expandvars(path)))
     if not p.is_absolute():
         p = Path.cwd() / p
+    if _is_sensitive_key_path(p):
+        raise ValueError(f"refusing to read a sensitive credential file as an API key: {p}")
     return p.read_text(encoding="utf-8").strip() if p.exists() else ""
 
 
@@ -56,7 +97,9 @@ def systemone_ollama(stage, state, question, timeout=DEFAULT_TIMEOUT_S):
     return float(resp["answers"]["done"]["noul"])
 
 
-def systemone_http(url, key, state, question, model=None, timeout=DEFAULT_TIMEOUT_S):
+def systemone_http(url, key, state, question, model=None, timeout=DEFAULT_TIMEOUT_S,
+                   allow_remote=False):
+    _require_loopback(url, allow_remote)
     payload = {
         "state": state,
         "questions": {"done": {"type": "noul", "instructions": question}},
@@ -74,7 +117,8 @@ def systemone_http(url, key, state, question, model=None, timeout=DEFAULT_TIMEOU
     return float(resp["answers"]["done"]["noul"])
 
 
-def openrouter_decisions(entry, state, question, timeout=DEFAULT_TIMEOUT_S):
+def openrouter_decisions(entry, state, question, timeout=DEFAULT_TIMEOUT_S,
+                         allow_remote=False):
     """Native decisions API (Typesafe Jev on OpenRouter).
 
     Same `state`/`questions` shape as systemone, so Jev plugs into the committee
@@ -83,6 +127,12 @@ def openrouter_decisions(entry, state, question, timeout=DEFAULT_TIMEOUT_S):
     (``key_env``, default ``OPENROUTER_API_KEY``).
     """
     url = entry.get("url") or "https://openrouter.ai/api/alpha/decisions"
+    host = _host_of(url)
+    if not allow_remote and host not in OPENROUTER_HOSTS:
+        raise ValueError(
+            f"refusing to send state to non-OpenRouter host {host!r}; "
+            'set "allow_remote": true on the entry to opt in'
+        )
     payload = {
         "model": entry["model"],
         "state": state,
@@ -138,13 +188,15 @@ def decide_gate(cfg, state, question):
     def ask(entry):
         t = entry.get("type")
         entry_timeout = float(entry.get("timeout_s", timeout))
+        allow_remote = bool(entry.get("allow_remote"))
         if t == "systemone-http":
             key = load_key(entry.get("key_file") or "")
-            return systemone_http(entry["url"], key, state, question, entry.get("model"), entry_timeout)
+            return systemone_http(entry["url"], key, state, question, entry.get("model"),
+                                  entry_timeout, allow_remote)
         if t == "systemone-ollama":
             return systemone_ollama(entry, state, question, entry_timeout)
         if t == "openrouter-decisions":
-            return openrouter_decisions(entry, state, question, entry_timeout)
+            return openrouter_decisions(entry, state, question, entry_timeout, allow_remote)
         raise ValueError("unknown consult type")
 
     def ask_retry(entry):

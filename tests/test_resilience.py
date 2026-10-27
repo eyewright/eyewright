@@ -27,7 +27,7 @@ def cfg(policy, attempts=1):
 state = {"n": 0}
 
 
-def flaky_http(url, key, s, q, model=None, timeout=None):
+def flaky_http(url, key, s, q, model=None, timeout=None, allow_remote=False):
     state["n"] += 1
     if state["n"] <= 2:
         raise OSError("boom")

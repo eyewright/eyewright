@@ -12,9 +12,14 @@ eyewright runs **local, trusted configuration and code**. Two boundaries matter:
 
 - **Gate config is code.** A config can name a `key_file` (read from disk, with
   `~`/env-var expansion) and a `url` (where the key is sent as a bearer token).
-  Running an untrusted config can read a local file and POST its contents to an
-  arbitrary host. Only run configs you trust. *(Hardening — restricting
-  `key_file` to a directory and `url` to an allowlist — is tracked separately.)*
+  Only run configs you trust. Guardrails are enforced in `gate.py`:
+  - **URL allowlist** — `systemone-http` eyes may only reach loopback
+    (`127.0.0.1` / `::1` / `localhost`); `openrouter-decisions` eyes may only reach
+    `openrouter.ai`. A remote host is refused unless the entry sets
+    `"allow_remote": true`.
+  - **Sensitive key files rejected** — `key_file` paths under `~/.ssh`, `~/.aws`,
+    `~/.gnupg`, `~/.config/gcloud`, `~/.azure`, `~/.kube`, or named like
+    `id_rsa`/`credentials`/`.env`/`.npmrc`/… are refused.
 - **Local exec.** `supervisor/svcwatch.py` runs commands from
   `supervisor/services.json`, and `eyewright gate --start-services` runs the
   supervisor as `sys.executable`. Both execute local scripts; run from a repo you

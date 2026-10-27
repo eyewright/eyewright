@@ -16,7 +16,7 @@ serve`` exposes it over HTTP and ``eyewright mcp`` exposes it as MCP tools.
 import json
 import urllib.request
 
-from .gate import DEFAULT_TIMEOUT_S, decide_gate, load_key
+from .gate import DEFAULT_TIMEOUT_S, _require_loopback, decide_gate, load_key
 
 # decisions that mean the typed path produced no usable signal: `auto` may fall back
 _NO_TYPED_SIGNAL = frozenset({"none", "review-primary-unavailable", "error-primary"})
@@ -33,6 +33,7 @@ def call_engine(entry, state, questions, timeout=DEFAULT_TIMEOUT_S):
     """One systemone call against a configured engine (an `entry` from the gate config)."""
     t = entry.get("type")
     if t == "systemone-http":
+        _require_loopback(entry["url"], bool(entry.get("allow_remote")))
         payload = {"state": state, "questions": questions}
         if entry.get("model"):
             payload["model"] = entry["model"]
