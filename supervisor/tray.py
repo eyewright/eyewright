@@ -185,7 +185,7 @@ def _eye(color: str, sclera: str = SCLERA_ON_DARK):
 
     s, n = 4, 64  # supersample factor, arc segments
     c = 64 * s / 2
-    w, h, r = 31 * s, 20 * s, 12 * s
+    w, h, r = 31 * s, 22 * s, 12 * s
     upper = [(c - w + 2 * w * i / n, c - h * math.sin(math.pi * i / n)) for i in range(n + 1)]
     lower = [(c - w + 2 * w * i / n, c + h * math.sin(math.pi * i / n)) for i in range(n - 1, 0, -1)]
     img = Image.new("RGBA", (64 * s, 64 * s), (0, 0, 0, 0))
@@ -226,16 +226,26 @@ class App:
             if entry.get("enabled", True)
         }
 
+    def refresh(self) -> None:
+        """Repaint the icon for the current health + taskbar theme."""
+        h = self.health()
+        ok = all(h.values()) if h else True
+        self.icon.icon = _eye("#3fb950" if ok else "#d29922", _sclera())
+        self.icon.title = _title(h)
+
     def health_loop(self) -> None:
+        # The first repaint can land before pystray's loop is running, in which
+        # case it is dropped and the tray sits on the idle grey for a full poll.
+        # Retry quickly once instead of waiting 15 s (icon.run(setup=...) was
+        # tried for this and left the icon invisible).
+        wait = 1
         while not self.stop.is_set():
             try:
-                h = self.health()
-                ok = all(h.values()) if h else True
-                self.icon.icon = _eye("#3fb950" if ok else "#d29922", _sclera())
-                self.icon.title = _title(h)
+                self.refresh()
             except Exception:
                 log(traceback.format_exc())
-            self.stop.wait(15)
+            self.stop.wait(wait)
+            wait = 15
 
     # ---- UI pump --------------------------------------------------------
     def pump(self) -> None:
