@@ -8,6 +8,7 @@ mod decide;
 mod engine;
 mod gate;
 mod generative;
+mod server;
 
 use std::collections::HashMap;
 
@@ -93,6 +94,29 @@ fn run() -> i32 {
         "ask" => {
             let engine = flags.get("engine").map(String::as_str).filter(|e| *e != "typed");
             decide::ask(&cfg, &state, &question, choices, levels, engine)
+        }
+        "serve" => {
+            if flags.contains_key("cert") || flags.contains_key("key") {
+                eprintln!("eyewright: TLS is not ported yet (slice 3b)");
+                return 2;
+            }
+            let host = flags
+                .get("host")
+                .cloned()
+                .unwrap_or_else(|| "127.0.0.1".into());
+            let port = flags
+                .get("port")
+                .and_then(|p| p.parse().ok())
+                .unwrap_or(8090);
+            let token = flags
+                .get("token")
+                .cloned()
+                .or_else(|| std::env::var("EYEWRIGHT_TOKEN").ok());
+            let max_body = flags
+                .get("max-body")
+                .and_then(|p| p.parse().ok())
+                .unwrap_or(1_000_000);
+            return server::serve(&cfg, &host, port, token, max_body);
         }
         other => {
             eprintln!("eyewright: unknown command {other:?}");

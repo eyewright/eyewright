@@ -16,7 +16,8 @@ Oracle:       parity/run.py, 22 cases against a stub engine over real HTTP
 ## Build and parity
 
     cd rust; cargo build --release
-    .venv/Scripts/python.exe parity/run.py
+    .venv/Scripts/python.exe parity/run.py      # CLI: 34 cases
+    .venv/Scripts/python.exe parity/serve.py    # HTTP: 11 requests
 
 The harness starts a fresh stub engine per case, writes a temp config, and
 runs each CLI as a subprocess. Compared: exit code, canonical JSON stdout,
@@ -46,14 +47,16 @@ because wording is not behavior; presence and the resulting decision are.
 
 1. DONE  config + guards + HTTP eyes + decide_gate + ask (typed path)
 2. DONE  generative engine + engine=auto fallback
-3.       serve: /health, /health/deep, /v1/gate, /v1/ask, token,
-         body cap, TLS
+3. DONE  serve: /health, /health/deep, /v1/gate, /v1/ask, token,
+         body cap (TLS deferred to 3b)
 4.       mcp stdio
 5.       supervisor/tray - not planned; platform UI with no cheap oracle
 
 ## Deviations
 
-D1  serve, mcp and the supervisor are absent (slice 3+).
+D1  mcp and the supervisor are absent. TLS (--cert/--key) is deferred:
+    the Rust server refuses those flags with exit 2 rather than silently
+    serving plain HTTP.
 D2  Uncaught errors: Python prints a traceback, Rust prints
     "eyewright: <msg>". Exit code 1 in both.
 D3  CLOSED in slice 2: engine=auto now falls back to the generative engine.
@@ -73,9 +76,14 @@ A1  --version was added (Python has no such flag). Harmless addition.
 
 - PARITY 22/22 against goldens captured from the untouched Python CLI.
 - Python determinism: 22/22 across two consecutive runs.
-- Mutation-tested twice: flipping the consensus direction check to accept
-  any direction turns the harness red (consensus-reject vs review-conflict);
-  changing the no-normalization flag for "no" turns gen-prose red.
+- Mutation-tested three times: flipping the consensus direction check to
+  accept any direction turns the CLI harness red; changing the normalization
+  flag for "no" turns gen-prose red; making the server ignore the token turns
+  two serve cases red (9/11).
+- serve.py starts both HTTP servers against their own stub, replays the same
+  11 requests, and compares status, canonical body and Content-Type. It
+  covers health, deep health, both auth paths, gate, ask, invalid JSON, the
+  body cap and 404s.
 - The first harness draft was vacuous: the stub bound an ephemeral port but
   the config pointed at a pre-picked one, so every request failed and the
   goldens recorded the failure path. The mutation test caught it. Fixed:

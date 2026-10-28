@@ -134,6 +134,15 @@ pub fn load_key(path: Option<&str>) -> Result<String, String> {
     }
 }
 
+/// Liveness probe for `/health/deep`. Any 2xx counts as up.
+pub fn url_ok(url: &str, timeout: f64) -> bool {
+    let agent = ureq::AgentBuilder::new()
+        .timeout_connect(Duration::from_secs_f64(timeout))
+        .timeout_read(Duration::from_secs_f64(timeout))
+        .build();
+    agent.get(url).call().is_ok()
+}
+
 pub fn post_json(url: &str, payload: &Value, timeout: f64, bearer: Option<&str>) -> Result<Value, String> {
     let agent = ureq::AgentBuilder::new()
         .timeout_connect(Duration::from_secs_f64(timeout))
