@@ -1,73 +1,81 @@
-# Register/uninstall the eyewright service supervisor to start at logon.
-#   pwsh -File supervisor/install.ps1
-#   pwsh -File supervisor/install.ps1 -Uninstall
+# Register/uninstall the eyewright tray at logon (per-user Startup folder, no admin).
+#   pwsh -File supervisor/install.ps1 -Tray
+#   pwsh -File supervisor/install.ps1 -Tray -Uninstall
+#   pwsh -File supervisor/install.ps1            # svcwatch only, no tray
 #
-# Uses the per-user Startup folder (no admin required). If you prefer a scheduled
-# task, create it elevated:
-#   schtasks /Create /TN eyewright-svcwatch /SC ONLOGON /RL LIMITED /F `
-#     /TR "\"C:\path\pythonw.exe\" \"C:\path\supervisor\svcwatch.py\""
+# The tray itself ships in the package (`pip install 'eyewright[tray]'`,
+# `eyewright-tray`); this script only wires autostart for a source checkout and
+# points it at the repo so `examples/gate.json` resolves.
 param([switch]$Uninstall, [switch]$Tray)
 $ErrorActionPreference = 'Stop'
 $here = Split-Path -Parent $MyInvocation.MyCommand.Path
-$script = Join-Path $here 'svcwatch.py'
-$trayScript = Join-Path $here 'tray.py'
+$repo = Split-Path -Parent $here
+$stateDir = Join-Path $env:LOCALAPPDATA 'eyewright'
 $startup = [Environment]::GetFolderPath('Startup')
 $cmdLauncher = Join-Path $startup 'eyewright-svcwatch.cmd'
 $lnkLauncher = Join-Path $startup 'eyewright tray.lnk'
 
+function Stop-FromPidFile($name) {
+    $f = Join-Path $stateDir $name
+    if (Test-Path $f) {
+        $old = Get-Content $f -ErrorAction SilentlyContinue
+        if ($old) { Stop-Process -Id ([int]$old) -Force -ErrorAction SilentlyContinue }
+        Remove-Item $f -ErrorAction SilentlyContinue
+    }
+}
+
 if ($Uninstall) {
     Remove-Item $cmdLauncher, $lnkLauncher -ErrorAction SilentlyContinue
-    foreach ($pidFile in @((Join-Path $here 'svcwatch.pid'), (Join-Path $here 'tray.pid'))) {
-        if (Test-Path $pidFile) {
-            $old = Get-Content $pidFile -ErrorAction SilentlyContinue
-            if ($old) { Stop-Process -Id ([int]$old) -Force -ErrorAction SilentlyContinue }
-        }
-    }
+    Stop-FromPidFile 'tray.pid'
+    Stop-FromPidFile 'svcwatch.pid'
     Write-Output "uninstalled (removed $cmdLauncher and $lnkLauncher)"
     return
 }
 
-$py = (Get-Command pythonw.exe -ErrorAction SilentlyContinue).Source
-if (-not $py) { $py = (Get-Command python.exe).Source }
+# Prefer the venv's windowed entry point: it is a GUI-subsystem exe, so logon
+# leaves no terminal behind. Fall back to the module form when the entry point
+# is missing - `uv sync` cannot rewrite Scripts/*.exe while an MCP server is
+# running from it.
+$trayExe = Join-Path $repo '.venv\Scripts\eyewright-tray.exe'
+$svcExe = Join-Path $repo '.venv\Scripts\eyewright-svcwatch.exe'
+$py = Join-Path $repo '.venv\Scripts\pythonw.exe'
+if (-not (Test-Path $trayExe)) {
+    $trayExe = $py
+    $trayArgs = '-m eyewright.tray'
+    Write-Warning "no eyewright-tray.exe yet - using 'pythonw -m eyewright.tray' (run 'uv sync' with no MCP server running to get the windowed entry point)"
+} else {
+    $trayArgs = ''
+}
+if (-not (Test-Path $svcExe)) {
+    $svcExe = $py
+    $svcArgs = '-m eyewright.svcwatch'
+} else {
+    $svcArgs = ''
+}
 
 if ($Tray) {
     # One windowless process: tray + supervisor loop + Decide dialog.
     # A .lnk (not a .cmd) means no cmd.exe flash at logon.
-    # Must use the project venv: pystray/pillow/eyewright live there, not in PATH python.
-    # uv's venv pythonw is a copy of python.exe (console subsystem), so it opens a
-    # terminal at logon. Prefer the base GUI pythonw; tray.py adds the venv's
-    # site-packages to sys.path, so pystray/Pillow still resolve.
-    $venvPy = Join-Path (Split-Path -Parent $here) '.venv\Scripts\pythonw.exe'
-    $basePy = Get-ChildItem -Path (Join-Path $env:APPDATA 'uv\python\cpython-3.12-*\pythonw.exe') -ErrorAction SilentlyContinue |
-        Select-Object -First 1
-    if ($basePy) { $py = $basePy.FullName } elseif (Test-Path $venvPy) { $py = $venvPy }
+    Stop-FromPidFile 'svcwatch.pid'
     Remove-Item $cmdLauncher -ErrorAction SilentlyContinue
-    $svcPid = Join-Path $here 'svcwatch.pid'
-    if (Test-Path $svcPid) {
-        $old = Get-Content $svcPid -ErrorAction SilentlyContinue
-        if ($old) { Stop-Process -Id ([int]$old) -Force -ErrorAction SilentlyContinue }
-        Remove-Item $svcPid -ErrorAction SilentlyContinue
-    }
     $sh = New-Object -ComObject WScript.Shell
     $l = $sh.CreateShortcut($lnkLauncher)
-    $l.TargetPath = $py
-    $l.Arguments = '"' + $trayScript + '"'
-    $l.WorkingDirectory = $here
+    $l.TargetPath = $trayExe
+    $l.Arguments = $trayArgs
+    $l.WorkingDirectory = $repo
     $l.Description = 'eyewright tray (supervisor + Decide)'
     $l.Save()
-    Write-Output "installed startup shortcut: $lnkLauncher  (python: $py)"
-    Start-Process -FilePath $py -ArgumentList @($trayScript) -WorkingDirectory $here -WindowStyle Hidden
+    Write-Output "installed startup shortcut: $lnkLauncher"
+    Start-Process -FilePath $trayExe -ArgumentList $trayArgs -WorkingDirectory $repo -WindowStyle Hidden
     Write-Output "started eyewright tray now"
     return
 }
 
 $cmd = @(
     '@echo off',
-    ('start "" "{0}" "{1}"' -f $py, $script)
+    ('start "" "{0}" {1}' -f $svcExe, $svcArgs)
 ) -join "`r`n"
 Set-Content -Path $cmdLauncher -Value $cmd -Encoding ASCII
-Write-Output "installed startup launcher: $cmdLauncher  (python: $py)"
-
-# start it now (detached, no console)
-Start-Process -FilePath $py -ArgumentList @($script) -WorkingDirectory $here -WindowStyle Hidden
+Write-Output "installed startup launcher: $cmdLauncher"
+Start-Process -FilePath $svcExe -ArgumentList $svcArgs -WorkingDirectory $repo -WindowStyle Hidden
 Write-Output "started svcwatch now"

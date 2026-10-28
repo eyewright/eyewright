@@ -194,11 +194,26 @@ von is retired from the consult roster (2026-10-06). See `docs/THREE-EYE.md`.
 
 ## Resilience
 
-- **Supervisor** (`supervisor/`): `services.json` + `svcwatch.py` keep local
-  services alive (health probe, detached restart with backoff, logs, single
-  instance). `laya-serve`'s descriptor pins `LAYA_DEFAULT_MODEL=typed-decisions`.
-  Autostart at logon: `pwsh -File supervisor/install.ps1`. The descriptor is
-  generic — an agent control plane's Model Router can adopt it.
+- **Tray** (`eyewright[tray]`): one windowless process that owns the supervisor,
+  shows an eye in the notification area, and opens a *Decide* window — drop a
+  file or type a question, get the same gate. The icon is the health signal
+  (green = `eyewright - ready`, amber = a service down) and follows the taskbar
+  theme.
+
+  ```powershell
+  pip install 'eyewright[tray]'
+  eyewright-tray          # tray + supervisor + Decide
+  ```
+
+  State lives outside the install: `%LOCALAPPDATA%\eyewright` (`$EYEWRIGHT_HOME`
+  to override) holds the pid, logs, and default configs. Autostart at logon in a
+  source checkout: `pwsh -File supervisor/install.ps1 -Tray`.
+- **Supervisor** (`eyewright-svcwatch`): keeps local services alive — health
+  probe, detached restart with backoff, logs, single instance. The descriptor is
+  `$EYEWRIGHT_SERVICES`, else `<state>/services.json`, else
+  `supervisor/services.json` in a checkout; `laya-serve`'s entry pins
+  `LAYA_DEFAULT_MODEL=typed-decisions`. The contract is generic — an agent control plane's Model
+  Router can adopt it.
 - **Caller**: `decide_gate` retries the primary (`attempts`, `retry_backoff_s`;
   `retries` is a legacy alias for attempts-beyond-first) and applies
   `on_primary_unavailable`: `fallback` (default) / `review` / `error`. Per-eye

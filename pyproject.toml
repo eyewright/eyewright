@@ -19,6 +19,12 @@ tray = ["pystray>=0.19", "pillow>=10"]
 
 [project.scripts]
 eyewright = "eyewright.cli:main"
+eyewright-svcwatch = "eyewright.svcwatch:main"
+
+# gui-scripts builds a windowed exe on Windows: a tray app started at logon must
+# not flash a console. Same entry point on other platforms.
+[project.gui-scripts]
+eyewright-tray = "eyewright.tray:main"
 
 # This checkout runs every face of eyewright (tray in supervisor/, MCP for AI
 # harnesses), and harnesses launch `.venv/Scripts/eyewright.exe` directly — so the

@@ -1,10 +1,13 @@
 """eyewright tray - one windowless process: supervisor + tray + Decide dialog.
 
-    pythonw supervisor/tray.py          # normal (tray icon, owns the supervisor)
-    python  supervisor/tray.py --check  # headless self-check, no GUI, no model call
+    eyewright-tray                # normal (tray icon, owns the supervisor)
+    python -m eyewright.tray --check   # headless self-check, no GUI, no model call
 
 Reuses ``svcwatch.watch_one`` for the keep-alive loop, so the tray owns the
 supervisor: one process, one startup entry, live health in the tooltip.
+
+State (pid, logs, default configs) lives outside the install, under
+``eyewright.paths.home()`` - a published package cannot write to site-packages.
 
 Threading contract (the wrinkle):
   - Tk owns the main thread (hidden root + ``after`` pump).
@@ -24,24 +27,13 @@ import time
 import traceback
 from pathlib import Path
 
-HERE = Path(__file__).resolve().parent
-ROOT = HERE.parent
-VENV_SITE = ROOT / ".venv" / "Lib" / "site-packages"
-if VENV_SITE.is_dir():
-    # The venv's pythonw is console-subsystem (uv ships a copy of python.exe), so
-    # launching it from the Startup shortcut always allocates a terminal - hiding
-    # it after the fact is unreliable. Run with a GUI-subsystem pythonw instead;
-    # this keeps pystray/Pillow importable from the venv without a console.
-    sys.path.insert(0, str(VENV_SITE))
-sys.path.insert(0, str(ROOT))   # import eyewright from the source checkout
-sys.path.insert(0, str(HERE))   # import svcwatch
+from . import svcwatch as svc
+from .paths import file, home
 
-import svcwatch as svc  # noqa: E402
-
-LOG_DIR = HERE / "logs"
-PID_FILE = HERE / "tray.pid"
-CONFIG = Path(os.environ.get("EYEWRIGHT_GATE", ROOT / "examples" / "gate.json"))
-SERVICES = Path(os.environ.get("EYEWRIGHT_SERVICES", HERE / "services.json"))
+LOG_DIR = home() / "logs"
+PID_FILE = home() / "tray.pid"
+CONFIG = file("EYEWRIGHT_GATE", "gate.json", "examples/gate.json")
+SERVICES = svc.DEFAULT_CONFIG
 
 STATE_CAP = 1_000_000   # total chars handed to the model
 FILE_CAP = 200_000      # per-file cap
@@ -133,7 +125,7 @@ def build_state(text: str, files, folders) -> str:
 
 def decide(text, files, folders, question, engine):
     """Call eyewright in-process. Runs on a worker thread, never the Tk thread."""
-    from eyewright import ask
+    from . import ask
 
     cfg = json.loads(CONFIG.read_text(encoding="utf-8"))
     state = build_state(text, files, folders)
@@ -420,6 +412,7 @@ def _menu():
 
 
 def _claim_pid() -> bool:
+    PID_FILE.parent.mkdir(parents=True, exist_ok=True)
     if PID_FILE.exists():
         try:
             old = int(PID_FILE.read_text(encoding="utf-8").strip())
@@ -436,16 +429,21 @@ def check() -> int:
     """Headless self-check: state assembly + config. No GUI, no model call."""
     import tempfile
 
+    pkg = Path(__file__).resolve().parent
     tmp = Path(tempfile.gettempdir()) / "eyewright-tray-check.txt"
     tmp.write_text("check-body", encoding="utf-8")
-    state = build_state("free text", [tmp], [HERE])
+    state = build_state("free text", [tmp], [pkg])
     assert "free text" in state
     assert "--- file: eyewright-tray-check.txt ---" in state and "check-body" in state
-    assert "--- folder: supervisor (" in state
-    gate = json.loads(CONFIG.read_text(encoding="utf-8"))
-    services = json.loads(SERVICES.read_text(encoding="utf-8"))
-    assert gate.get("primary") and gate.get("generative", {}).get("model")
-    assert services.get("services")
+    assert f"--- folder: {pkg.name} (" in state
+
+    # Configs are optional: a fresh `pip install` has neither until the user
+    # writes one, and the tray must still run (no supervised services).
+    gate = json.loads(CONFIG.read_text(encoding="utf-8")) if CONFIG.exists() else {}
+    services = json.loads(SERVICES.read_text(encoding="utf-8")) if SERVICES.exists() else {}
+    if gate:
+        assert gate.get("primary")
+    assert not services or "services" in services
 
     def near(px, rgb, tol=4):
         return all(abs(a - b) <= tol for a, b in zip(px[:3], rgb))
@@ -467,8 +465,9 @@ def check() -> int:
     assert _title({}) == "eyewright - no services"
 
     print(
-        f"ok: state assembly + configs ({CONFIG.name}, {SERVICES.name}) + tray eye; "
-        f"generative={gate['generative']['model']}"
+        f"ok: state assembly + tray eye + configs "
+        f"(gate={CONFIG.name if gate else 'none'}, services={SERVICES.name if services else 'none'}); "
+        f"state dir={home()}"
     )
     return 0
 
@@ -486,7 +485,7 @@ def main() -> int:
     sys.stderr = open(LOG_DIR / "tray.log", "a", encoding="utf-8", buffering=1)
     sys.excepthook = _excepthook
 
-    services = json.loads(SERVICES.read_text(encoding="utf-8"))
+    services = json.loads(SERVICES.read_text(encoding="utf-8")) if SERVICES.exists() else {"services": {}}
     root = tk.Tk()
     root.withdraw()
     icon = pystray.Icon("eyewright", _eye("#8b949e", _sclera()), "eyewright", _menu())

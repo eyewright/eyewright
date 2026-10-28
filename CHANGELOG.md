@@ -18,6 +18,13 @@ Notable changes to eyewright. Versions are the distribution version.
   `EYEWRIGHT_TOKEN` is documented as the primary method (#26).
 - `ask`: choice/score `probabilities` are rounded to 4 decimal places, like the
   rest of the output.
+- **The tray ships.** `eyewright/tray.py` + `eyewright/svcwatch.py` moved out of
+  `supervisor/` into the package, with `eyewright-tray` (a GUI-subsystem entry
+  point, so logon shows no console) and `eyewright-svcwatch`. `pip install
+  'eyewright[tray]'` is now a real install rather than an extra with no code
+  behind it. State (pid, logs, default configs) moved to
+  `%LOCALAPPDATA%\eyewright` / `$EYEWRIGHT_HOME`, because a published package
+  cannot write inside `site-packages`.
 - `tests/mcp_smoke.py`: exercises the same bare `uv run eyewright mcp` launch path
   the harnesses use, and asserts the tool set.
 - `supervisor/install.ps1`: the non-tray autostart branch wrote to an undefined

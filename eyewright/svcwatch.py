@@ -1,15 +1,17 @@
 """svcwatch - a tiny keep-alive supervisor for local model services.
 
-Reads ``supervisor/services.json`` and keeps each enabled service running: probes
-its health URL, starts it (detached) when down, restarts with backoff, and logs.
-The descriptor is deliberately generic so an agent control plane's Model Router (M3 adapter family)
-can adopt the same contract later.
+Reads a ``services.json`` descriptor and keeps each enabled service running:
+probes its health URL, starts it (detached) when down, restarts with backoff,
+and logs. The descriptor is deliberately generic so an agent control plane's Model Router (M3
+adapter family) can adopt the same contract later.
 
-    uv run python supervisor/svcwatch.py --status
-    uv run python supervisor/svcwatch.py --once        # start anything down, exit
-    uv run python supervisor/svcwatch.py               # watch (default)
+    eyewright-svcwatch --status
+    eyewright-svcwatch --once        # start anything down, exit
+    eyewright-svcwatch               # watch (default)
 
-Logs: ``supervisor/logs/svcwatch.log`` and one log per service.
+Descriptor: ``$EYEWRIGHT_SERVICES``, else ``<state>/services.json``, else
+``supervisor/services.json`` in a source checkout. Logs go to ``<state>/logs``
+(see ``eyewright.paths``).
 """
 
 import argparse
@@ -23,10 +25,11 @@ import time
 import urllib.request
 from pathlib import Path
 
-HERE = Path(__file__).resolve().parent
-DEFAULT_CONFIG = HERE / "services.json"
-LOG_DIR = HERE / "logs"
-PID_FILE = HERE / "svcwatch.pid"
+from .paths import file, home
+
+DEFAULT_CONFIG = file("EYEWRIGHT_SERVICES", "services.json", "supervisor/services.json")
+LOG_DIR = home() / "logs"
+PID_FILE = home() / "svcwatch.pid"
 
 
 def healthy(url, timeout=3.0):
@@ -64,7 +67,7 @@ def log(msg):
 
 
 def start(name, svc):
-    cwd = os.path.expanduser(os.path.expandvars(svc.get("cwd") or str(HERE)))
+    cwd = os.path.expanduser(os.path.expandvars(svc.get("cwd") or str(Path.home())))
     env = dict(os.environ)
     env.update(svc.get("env") or {})
     LOG_DIR.mkdir(parents=True, exist_ok=True)
@@ -168,6 +171,7 @@ def main():
     if args.once:
         return cmd_once(config)
 
+    PID_FILE.parent.mkdir(parents=True, exist_ok=True)
     if PID_FILE.exists():
         try:
             old = int(PID_FILE.read_text(encoding="utf-8").strip())

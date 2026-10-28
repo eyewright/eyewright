@@ -23,6 +23,9 @@ jobs:
       - run: uv run python tests/test_auto_fallback.py
       - run: uv run python tests/test_generative.py
       - run: uv run python tests/test_security.py
+      # tray/paths live in the package now; this guards the config resolution
+      # and the drawn icon without needing a display.
+      - run: uv run python -m eyewright.tray --check
       - run: uv build
 
   # The Rust port lives in rust/ and had no coverage at all, so it silently

@@ -1,19 +1,23 @@
 # Tray + Decide UI
 
-**Status:** implemented v0.1 (2026-10-17) — `supervisor/tray.py`, `pystray` + `tkinter`.
-Install: `pwsh -File supervisor/install.ps1 -Tray`. Self-check:
-`python supervisor/tray.py --check`.
+**Status:** shipped in the package - `eyewright/tray.py`, `pystray` + `tkinter`.
+`pip install 'eyewright[tray]'` then `eyewright-tray`. Self-check:
+`python -m eyewright.tray --check`. Autostart from a checkout:
+`pwsh -File supervisor/install.ps1 -Tray`.
 **Goal:** keep eyewright one click away — a notification-tray icon that shows service
 health and opens a small "Decide" window (files / folders / text) that calls the gate
 or the generative engine.
 
 ## What already exists
 
-- `supervisor/svcwatch.py` — headless keep-alive for the local model services
-  (`services.json`; health probe, detached restart with backoff, logs, single
-  instance). Started at logon by `supervisor/install.ps1`, which writes a Startup
-  `.cmd` that runs `pythonw.exe supervisor/svcwatch.py` (**windowless** — no console,
-  no terminal).
+- `eyewright/svcwatch.py` - headless keep-alive for the local model services
+  (health probe, detached restart with backoff, logs, single instance), exposed as
+  `eyewright-svcwatch`. Started at logon by `supervisor/install.ps1`, which writes
+  a Startup entry (**windowless** - no console, no terminal).
+
+  State - pid, logs, and the default `services.json`/`gate.json` - lives under
+  `eyewright.paths.home()`: `%LOCALAPPDATA%\eyewright` (`$EYEWRIGHT_HOME` to
+  override). A published install cannot write inside `site-packages`.
 - Four faces: Python `ask()`, CLI `eyewright ask|gate|serve|mcp`, HTTP `serve`
   (`:8090`, `POST /v1/ask`, `POST /v1/gate`), MCP (`eyewright_gate`, `eyewright_ask`).
 - `examples/gate.json`: primary `laya-td` (typed-decisions), consults `tev1:4b` +
@@ -86,16 +90,14 @@ flash a console window. Replace it with a shortcut that has no `cmd.exe`:
 
 ```text
 %APPDATA%\Microsoft\Windows\Start Menu\Programs\Startup\eyewright tray.lnk
-    ->  pythonw.exe "…\supervisor\tray.py"
+    ->  .venv\Scripts\eyewright-tray.exe
 ```
 
-(or a hidden scheduled task). The tray is `pythonw`, so it stays windowless.
-
-**Caveat (2026-10-27):** the *venv's* `pythonw.exe` is a byte-identical copy of
-`python.exe` — console subsystem — so pointing the shortcut at
-`.venv\Scripts\pythonw.exe` still produces a terminal. Point it at the base uv
-`pythonw.exe` instead; `tray.py` prepends the venv's site-packages itself. Check
-a candidate with the PE subsystem byte (`2` = GUI, `3` = console).
+`[project.gui-scripts]` builds that exe with the **GUI** subsystem, so logon
+leaves no terminal behind. Until it exists — `uv sync` cannot replace
+`Scripts\*.exe` while an MCP server runs from it — `install.ps1` falls back to
+`pythonw -m eyewright.tray`. The venv's `pythonw.exe` is a copy of `python.exe`
+(console subsystem), so `main()` calls `_hide_console()` to suppress the window.
 
 ## Gotchas
 
