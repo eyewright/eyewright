@@ -17,15 +17,19 @@ AI harness.
 
 ## Demo
 
-The gate on an agent-loop step — `"Is the task done?"`. The primary eye is
-unsure (`0.6663`), so both consults fire; they agree at `0.9938` and `0.9421`
-→ `consensus-accept`, `p_done 0.968`.
+Four calls, one per decision kind — **accept → send back → refuse → escalate**:
 
-![eyewright gate: the committee carries a wavering primary](docs/demo/eyewright-demo.gif)
+| question | verdict |
+|---|---|
+| `Is the task done?` (all work merged) | `consensus-accept` — primary unsure at 0.6663, both consults agree |
+| `Is the task done?` (untested retry loop) | `review-low` — sure, so no consult is spent |
+| `Is this migration safe?` (drops a live column) | `consensus-reject` — both consults say no |
+| `Safe to merge?` (deployed, no alerts) | `review-conflict` — the consults disagree, so gather evidence |
 
-Two-beat version with the `review-low` case:
-[`docs/demo/eyewright-demo.mp4`](docs/demo/eyewright-demo.mp4). Both are
-generated from VHS tapes — see [`docs/demo/`](docs/demo/README.md).
+![eyewright: four decisions, one per verdict](docs/demo/eyewright-demo.gif)
+
+Higher-resolution version: [`docs/demo/eyewright-demo.mp4`](docs/demo/eyewright-demo.mp4).
+Both are generated from VHS tapes — see [`docs/demo/`](docs/demo/README.md).
 
 ## Install
 

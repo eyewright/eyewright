@@ -12,11 +12,11 @@ export PATH="$HOME/.local/bin:$PATH"
 cd REPO
 vhs docs/demo/eyewright-demo.tape
 vhs docs/demo/eyewright-readme.tape
-# The teaser is cropped to its content box (measured: 795x450 of 1100x560) so it
+# The teaser is cropped to its content box (measured: 805x525 of 1100x560) so it
 # reads as a tight strip, and sized at 850 px so a README column shows it 1:1
-# instead of downscaling the text into mush. Palette-reduced to keep it ~125 KB.
+# instead of downscaling the text into mush. Palette-reduced; ~660 KB at 17 s.
 ffmpeg -y -v error -i docs/demo/eyewright-readme.mp4 \
-  -vf "crop=850:480:0:0,fps=12,split[a][b];[a]palettegen=max_colors=96:stats_mode=diff[p];[b][p]paletteuse=dither=bayer:bayer_scale=4" \
+  -vf "crop=850:540:0:10,fps=12,split[a][b];[a]palettegen=max_colors=96:stats_mode=diff[p];[b][p]paletteuse=dither=bayer:bayer_scale=4" \
   -loop 0 docs/demo/eyewright-demo.gif
 rm -f docs/demo/eyewright-readme.mp4
 '@ -replace 'REPO', $repoWsl -replace "`r`n", "`n"

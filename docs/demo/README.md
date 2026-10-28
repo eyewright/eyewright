@@ -6,7 +6,7 @@ Two artefacts, **both generated from tapes** by
 | file | what | size |
 |---|---|---|
 | `eyewright-demo.mp4` | full demo, two beats, 2560x1440, ~21 s | for applications / release asset |
-| `eyewright-demo.gif` | one-beat teaser, 850x480, ~8 s | for the README (GitHub does not render `<video>` in markdown) |
+| `eyewright-demo.gif` | four-beat teaser, 850x540, ~17 s, ~660 KB | for the README (GitHub does not render `<video>` in markdown) |
 
 ## Render
 
@@ -17,25 +17,28 @@ pwsh -File docs/demo/render.ps1
 Produces both files. The tapes:
 
 - `eyewright-demo.tape` — the two-beat video.
-- `eyewright-readme.tape` — the teaser. One beat only, narrow canvas, cropped to
-  its content box afterwards (measured: 795x450 of 1100x560) so there is no dead
+- `eyewright-readme.tape` — the teaser. Four beats, narrow canvas, cropped to
+  its content box afterwards (measured: 805x525 of 1100x560) so there is no dead
   terminal around it, and sized at 850 px so a README column shows it 1:1
   instead of downscaling 15 px text into mush.
 
 ## What it shows
 
-The gate on an agent-loop step (`"Is the task done?"`):
+The GIF cycles one beat per **decision kind**, on four different questions:
 
-1. **The video, beat 1 — the committee carries a wavering primary.** The primary
-   is unsure (`primary: 0.6663`), so both consults fire; they agree at `0.9938`
-   and `0.9421` → `consensus-accept`, `p_done 0.968`. (This is the GIF.)
-2. **The video, beat 2 — it says no without wasting a consult.** Clearly
-   incomplete work scores `0.197` → `review-low`, `consults: {}`.
+| # | question | verdict | why |
+|---|---|---|---|
+| 1 | agent loop: `Is the task done?` (all work merged) | `consensus-accept` **0.968** | primary unsure at `0.6663`; both consults fire and agree (`0.9938`, `0.9421`) |
+| 2 | agent loop: `Is the task done?` (untested retry loop) | `review-low` **0.197** | primary is sure, so no consult is spent |
+| 3 | `Is this migration safe?` (drops a live column) | `consensus-reject` **0.050** | both consults confident it is unsafe |
+| 4 | `Safe to merge?` (deployed, no alerts) | `review-conflict` **0.626** | the consults disagree → the caller gathers evidence |
 
-Both are the product working as designed: it acts when the eyes agree and sends
-work back when they don't. The numbers are whatever the local models return on
-the render machine — the tapes never print a canned result. They are stable
-across runs because the models run at temperature 0.
+Accept → send back → refuse → escalate. That is the whole policy surface in one
+loop. The video keeps the first two beats in full resolution.
+
+The numbers are whatever the local models return on the render machine — the
+tapes never print a canned result. They are stable across runs because the
+models run at temperature 0.
 
 ## Config matches the bench
 
