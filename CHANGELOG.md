@@ -10,6 +10,14 @@ Notable changes to eyewright. Versions are the distribution version.
   installs it. Published installs still opt in (`eyewright[mcp]`, `eyewright[tray]`).
 - `eyewright mcp`: one-line, actionable message instead of a traceback when the
   `mcp` package is missing.
+- `serve`: deep health is matched on the exact path (`/health/deep`, or
+  `/health?deep=1`). A path that merely *contained* "deep" (e.g. `/v1/deepseek`)
+  used to be treated as deep health: with a token set it answered 401 instead of
+  404 and ran the dependency probes (#25).
+- `serve --token`: warns that the value is visible in the process list, and
+  `EYEWRIGHT_TOKEN` is documented as the primary method (#26).
+- `ask`: choice/score `probabilities` are rounded to 4 decimal places, like the
+  rest of the output.
 - `tests/mcp_smoke.py`: exercises the same bare `uv run eyewright mcp` launch path
   the harnesses use, and asserts the tool set.
 - `supervisor/install.ps1`: the non-tray autostart branch wrote to an undefined

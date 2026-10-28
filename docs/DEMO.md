@@ -2,12 +2,12 @@
 
 > **The video is generated, not screen-recorded.** `docs/demo/eyewright-demo.mp4`
 > comes from `docs/demo/eyewright-demo.tape` — re-render it with
-> `docs/demo/render.ps1` instead of recording. This file is the **beat and
-> voiceover script**: the timings below are for narration, not for capture.
+> `docs/demo/render.ps1`. This file is the **beat script**: what each segment
+> claims, and the commands behind it. Nothing here needs to be recorded by hand.
 
-Recording script. Target **90 s**. Everything runs **locally** on the recorder's
-machine. Numbers below are the shapes to show; **dry-run every command off-camera**
-and keep the real output for the take.
+Beat script. The shipped demo is ~21 s and silent; the timings below describe a
+longer cut if one is ever needed. Numbers are shapes to show, not fixtures —
+re-run the commands for real output.
 
 ## Format (read first)
 This is **one continuous screen recording — not screenshots.** You screen-record as
