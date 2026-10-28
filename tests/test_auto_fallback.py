@@ -24,8 +24,9 @@ def stub_gen(cfg, state, question, choices=None, levels=None, kind=None):
 def main():
     Gen.ask_generative = stub_gen
 
-    # no usable typed signal -> fall back
-    for decision in ("none", "review-primary-unavailable", "error-primary"):
+    # no usable typed signal -> fall back. `error-primary` is not in this set:
+    # gate.py sets it and raises, so it is covered by the exception case below.
+    for decision in ("none", "review-primary-unavailable"):
         D.decide_gate = lambda cfg, s, q, d=decision: (0.0, {"decision": d})
         out = D.ask(CFG, "s", "q", engine="auto")
         assert out.get("fallback") == "typed->generative", (decision, out)

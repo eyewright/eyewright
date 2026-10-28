@@ -6,6 +6,7 @@ Regression test for #1 (version drift).
 """
 
 import sys
+from importlib.metadata import PackageNotFoundError
 from importlib.metadata import version as dist_version
 from pathlib import Path
 
@@ -15,10 +16,19 @@ import eyewright  # noqa: E402
 
 
 def main():
-    dist = dist_version("eyewright")
+    try:
+        dist = dist_version("eyewright")
+    except PackageNotFoundError:
+        # Running from a source checkout that was never installed. The check is
+        # about installed metadata matching __version__, so there is nothing to
+        # compare - skip rather than raise (a bare traceback here reads like a
+        # broken test, not a missing install).
+        print("version check skipped: eyewright is not installed in this environment")
+        return 0
     assert eyewright.__version__ == dist, (eyewright.__version__, dist)
     print(f"version ok: __version__ == dist == {dist}")
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

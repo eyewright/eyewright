@@ -18,6 +18,12 @@ Notable changes to eyewright. Versions are the distribution version.
   `EYEWRIGHT_TOKEN` is documented as the primary method (#26).
 - `ask`: choice/score `probabilities` are rounded to 4 decimal places, like the
   rest of the output.
+- MCP `eyewright_ask` accepts `levels`, so score/scale decisions are reachable
+  from a harness (CLI `--levels` and HTTP `/v1/ask` already had them) (#8).
+- `tests/test_version.py` skips with a clear message when the package is not
+  installed, instead of raising `PackageNotFoundError` before any assertion (#28).
+- `error-primary` dropped from `_NO_TYPED_SIGNAL`: gate sets it and raises, so it
+  never returns as a decision - the exception path is its live route (#27).
 - **The tray ships.** `eyewright/tray.py` + `eyewright/svcwatch.py` moved out of
   `supervisor/` into the package, with `eyewright-tray` (a GUI-subsystem entry
   point, so logon shows no console) and `eyewright-svcwatch`. `pip install

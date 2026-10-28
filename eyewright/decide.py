@@ -18,8 +18,11 @@ import urllib.request
 
 from .gate import DEFAULT_TIMEOUT_S, _require_loopback, decide_gate, load_key
 
-# decisions that mean the typed path produced no usable signal: `auto` may fall back
-_NO_TYPED_SIGNAL = frozenset({"none", "review-primary-unavailable", "error-primary"})
+# Decisions that mean the typed path produced no usable signal, so `auto` may fall
+# back to the generative engine. `error-primary` is deliberately absent: gate.py
+# sets that decision and raises on the next line, so it never comes back as a
+# returned trace - its live path is the try/except around decide_gate below (#27).
+_NO_TYPED_SIGNAL = frozenset({"none", "review-primary-unavailable"})
 
 
 def _post_json(url, payload, timeout=DEFAULT_TIMEOUT_S):

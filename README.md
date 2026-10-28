@@ -126,7 +126,7 @@ serve HTTPS. The token is authentication, not encryption - off-loopback use TLS
 **MCP** (for any AI harness)
 ```powershell
 uv run eyewright mcp
-# tools: eyewright_gate(state, question), eyewright_ask(state, question, choices?, engine?)
+# tools: eyewright_gate(state, question), eyewright_ask(state, question, choices?, levels?, engine?)
 ```
 Smoke test: `uv run python tests/mcp_smoke.py`.
 
