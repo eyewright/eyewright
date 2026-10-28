@@ -108,6 +108,14 @@ fn run() -> i32 {
                 .get("port")
                 .and_then(|p| p.parse().ok())
                 .unwrap_or(8090);
+            // Process arguments are readable by any local user (`ps`,
+            // Win32_Process); EYEWRIGHT_TOKEN is the safe path (#26).
+            if flags.get("token").is_some() {
+                eprintln!(
+                    "eyewright: warning: --token is visible in the process list; \
+                     prefer EYEWRIGHT_TOKEN"
+                );
+            }
             let token = flags
                 .get("token")
                 .cloned()

@@ -89,24 +89,46 @@ fn deep_health(cfg: &Cfg) -> Value {
     })
 }
 
+/// Split a request target into (path, query terms), normalised.
+///
+/// Exact matching matters: deep health used to be gated on `contains("deep")`,
+/// so `/v1/deepseek` or `/health/deepish` counted as deep health, answered 401
+/// instead of 404, and ran the slow dependency probes (#25).
+fn route(target: &str) -> (&str, Vec<&str>) {
+    let (raw, query) = match target.split_once('?') {
+        Some((p, q)) => (p, Some(q)),
+        None => (target, None),
+    };
+    let path = raw.trim_end_matches('/');
+    let path = if path.is_empty() { "/" } else { path };
+    let terms = query.map(|q| q.split('&').collect()).unwrap_or_default();
+    (path, terms)
+}
+
+/// Whether a GET should run the deep-health probes (and so require auth).
+fn is_deep(path: &str, query: &[&str]) -> bool {
+    path == "/health/deep" || (path == "/health" && query.contains(&"deep=1"))
+}
+
 fn handle_get(request: Request, cfg: &Cfg, token: &Option<String>) {
-    let path = request.url().to_string();
-    let deep = path.contains("deep");
+    let target = request.url().to_string();
+    let (path, query) = route(&target);
+    // Only /health can opt into deep health; a stray ?deep=1 on another path
+    // must fall through to 404, not run the probes.
+    let deep = is_deep(path, &query);
     if deep && !authorized(&request, token) {
         json_response(request, 401, &json!({"error": "unauthorized"}));
         return;
     }
-    if path.starts_with("/health") {
-        if deep {
-            let body = deep_health(cfg);
-            json_response(request, 200, &body);
-        } else {
-            json_response(
-                request,
-                200,
-                &json!({"status": "ok", "service": "eyewright", "version": VERSION}),
-            );
-        }
+    if deep {
+        let body = deep_health(cfg);
+        json_response(request, 200, &body);
+    } else if path == "/health" {
+        json_response(
+            request,
+            200,
+            &json!({"status": "ok", "service": "eyewright", "version": VERSION}),
+        );
     } else if path == "/" {
         json_response(
             request,
@@ -216,4 +238,35 @@ pub fn serve(cfg: &Cfg, host: &str, port: u16, token: Option<String>, max_body: 
         });
     }
     0
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{is_deep, route};
+
+    fn deep(target: &str) -> bool {
+        let (path, query) = route(target);
+        is_deep(path, &query)
+    }
+
+    #[test]
+    fn deep_health_matches_exactly() {
+        assert!(deep("/health/deep"));
+        assert!(deep("/health/deep?x=1"));
+        assert!(deep("/health/?deep=1"));
+        assert!(deep("/health?deep=1"));
+        assert!(!deep("/health"));
+        assert!(!deep("/health?deep=0"));
+        // #25: a path that merely contains "deep" is not deep health.
+        for target in ["/v1/deepseek", "/health/deepish", "/deep", "/v1/x?deep=1"] {
+            assert!(!deep(target), "{target}");
+        }
+    }
+
+    #[test]
+    fn route_normalises() {
+        assert_eq!(route("/"), ("/", vec![]));
+        assert_eq!(route("/health/"), ("/health", vec![]));
+        assert_eq!(route("/health?deep=1"), ("/health", vec!["deep=1"]));
+    }
 }
