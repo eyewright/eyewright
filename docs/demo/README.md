@@ -1,7 +1,8 @@
 # Demo
 
 Two artefacts, **both generated from tapes** by
-[VHS](https://github.com/charmbracelet/vhs) — no screen recording, no human.
+[VHS](https://github.com/charmbracelet/vhs), so they are reproducible: change a
+line in a tape and re-render, instead of re-recording.
 
 | file | what | size |
 |---|---|---|
