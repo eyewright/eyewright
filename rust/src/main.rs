@@ -8,6 +8,7 @@ mod decide;
 mod engine;
 mod gate;
 mod generative;
+mod mcp;
 mod server;
 
 use std::collections::HashMap;
@@ -95,6 +96,7 @@ fn run() -> i32 {
             let engine = flags.get("engine").map(String::as_str).filter(|e| *e != "typed");
             decide::ask(&cfg, &state, &question, choices, levels, engine)
         }
+        "mcp" => return mcp::run(&cfg),
         "serve" => {
             if flags.contains_key("cert") || flags.contains_key("key") {
                 eprintln!("eyewright: TLS is not ported yet (slice 3b)");

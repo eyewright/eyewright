@@ -16,8 +16,9 @@ Oracle:       parity/run.py, 22 cases against a stub engine over real HTTP
 ## Build and parity
 
     cd rust; cargo build --release
-    .venv/Scripts/python.exe parity/run.py      # CLI: 34 cases
-    .venv/Scripts/python.exe parity/serve.py    # HTTP: 11 requests
+    .venv/Scripts/python.exe parity/run.py          # CLI: 34 cases
+    .venv/Scripts/python.exe parity/serve.py        # HTTP: 11 requests
+    .venv/Scripts/python.exe parity/mcp_parity.py   # MCP: 7 messages
 
 The harness starts a fresh stub engine per case, writes a temp config, and
 runs each CLI as a subprocess. Compared: exit code, canonical JSON stdout,
@@ -49,14 +50,14 @@ because wording is not behavior; presence and the resulting decision are.
 2. DONE  generative engine + engine=auto fallback
 3. DONE  serve: /health, /health/deep, /v1/gate, /v1/ask, token,
          body cap (TLS deferred to 3b)
-4.       mcp stdio
+4. DONE  mcp stdio
 5.       supervisor/tray - not planned; platform UI with no cheap oracle
 
 ## Deviations
 
-D1  mcp and the supervisor are absent. TLS (--cert/--key) is deferred:
-    the Rust server refuses those flags with exit 2 rather than silently
-    serving plain HTTP.
+D1  The supervisor/tray is absent. TLS (--cert/--key) is deferred: the Rust
+    server refuses those flags with exit 2 rather than silently serving
+    plain HTTP.
 D2  Uncaught errors: Python prints a traceback, Rust prints
     "eyewright: <msg>". Exit code 1 in both.
 D3  CLOSED in slice 2: engine=auto now falls back to the generative engine.
@@ -70,20 +71,29 @@ D7  The generative transport reads EYEWRIGHT_OLLAMA_URL (default
     http://localhost:11434) so the harness can redirect it to the stub.
     Python hardcodes the URL. Payload construction and everything above the
     transport are unchanged and compared.
+D8  MCP argument validation: a missing required argument returns a short
+    "missing required argument" message in Rust, while Python returns a
+    pydantic validation dump. isError is true in both; the text is not
+    compared. The MCP server is hand-rolled: initialize, ping, tools/list,
+    tools/call and the method-not-found error are ported; resources/prompts
+    are advertised but have no handlers, same as Python.
 A1  --version was added (Python has no such flag). Harmless addition.
 
 ## Evidence
 
 - PARITY 22/22 against goldens captured from the untouched Python CLI.
 - Python determinism: 22/22 across two consecutive runs.
-- Mutation-tested three times: flipping the consensus direction check to
+- Mutation-tested four times: flipping the consensus direction check to
   accept any direction turns the CLI harness red; changing the normalization
   flag for "no" turns gen-prose red; making the server ignore the token turns
-  two serve cases red (9/11).
+  two serve cases red (9/11); changing MCP serverInfo.version turns id=1 red
+  (6/7).
 - serve.py starts both HTTP servers against their own stub, replays the same
   11 requests, and compares status, canonical body and Content-Type. It
   covers health, deep health, both auth paths, gate, ask, invalid JSON, the
   body cap and 404s.
+- mcp_parity.py drives both stdio servers with the same 7 JSON-RPC messages
+  (initialize, tools/list, gate, ask, unknown tool, ping, unknown method).
 - The first harness draft was vacuous: the stub bound an ephemeral port but
   the config pointed at a pre-picked one, so every request failed and the
   goldens recorded the failure path. The mutation test caught it. Fixed:
