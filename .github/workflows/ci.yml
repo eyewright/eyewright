@@ -24,3 +24,11 @@ jobs:
       - run: uv run python tests/test_generative.py
       - run: uv run python tests/test_security.py
       - run: uv build
+
+  # The Rust port lives in rust/ and had no coverage at all, so it silently
+  # carried the same two bugs the Python side had (#25, #26).
+  rust:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - run: cargo test --manifest-path rust/Cargo.toml
