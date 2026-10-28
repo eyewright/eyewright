@@ -13,7 +13,7 @@ pub fn round4(x: f64) -> f64 {
     (x * 10_000.0).round() / 10_000.0
 }
 
-fn truncate(s: &str, n: usize) -> String {
+pub fn truncate(s: &str, n: usize) -> String {
     s.chars().take(n).collect()
 }
 

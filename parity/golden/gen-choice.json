@@ -1,0 +1,4 @@
+{
+  "exit": 0,
+  "stdout": "{\"answer\":\"b\",\"calibrated\":false,\"confidence\":0.7,\"engine\":\"generative\",\"kind\":\"choice\",\"model\":\"gen\",\"raw\":\"{\\\"answer\\\":\\\"B\\\",\\\"confidence\\\":0.7}\",\"reason\":null}"
+}

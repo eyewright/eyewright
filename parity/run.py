@@ -25,6 +25,7 @@ PARITY = ROOT / "parity"
 GOLDEN = PARITY / "golden"
 STUB = PARITY / "stub_engine.py"
 PY_ENTRY = PARITY / "py_entry.py"
+PY_GEN_ENTRY = PARITY / "py_gen_entry.py"
 RS_BIN = ROOT / "rust" / "target" / "release" / "eyewright.exe"
 
 BASE_CONFIG = {
@@ -113,7 +114,7 @@ def run_case(case, side, tmpdir):
         cfg_path.write_text(raw, encoding="utf-8")
 
         argv = (
-            [sys.executable, str(PY_ENTRY)]
+            [sys.executable, str(PY_GEN_ENTRY if case.get("gen") else PY_ENTRY)]
             if side == "py"
             else [str(RS_BIN)]
         )
@@ -125,6 +126,9 @@ def run_case(case, side, tmpdir):
             "--question",
             "q",
         ]
+        env = {**os.environ, "PYTHONIOENCODING": "utf-8"}
+        if case.get("gen"):
+            env["EYEWRIGHT_OLLAMA_URL"] = stub_url
         try:
             proc = subprocess.run(
                 argv,
@@ -132,7 +136,7 @@ def run_case(case, side, tmpdir):
                 capture_output=True,
                 text=True,
                 timeout=120,
-                env={**os.environ, "PYTHONIOENCODING": "utf-8"},
+                env=env,
             )
         except subprocess.TimeoutExpired:
             return {"exit": -1, "stdout": "", "stderr": "HARNESS TIMEOUT"}, transcript

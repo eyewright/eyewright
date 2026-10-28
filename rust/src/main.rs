@@ -7,6 +7,7 @@ mod config;
 mod decide;
 mod engine;
 mod gate;
+mod generative;
 
 use std::collections::HashMap;
 

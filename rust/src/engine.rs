@@ -134,7 +134,7 @@ pub fn load_key(path: Option<&str>) -> Result<String, String> {
     }
 }
 
-fn post_json(url: &str, payload: &Value, timeout: f64, bearer: Option<&str>) -> Result<Value, String> {
+pub fn post_json(url: &str, payload: &Value, timeout: f64, bearer: Option<&str>) -> Result<Value, String> {
     let agent = ureq::AgentBuilder::new()
         .timeout_connect(Duration::from_secs_f64(timeout))
         .timeout_read(Duration::from_secs_f64(timeout))

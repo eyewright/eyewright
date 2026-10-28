@@ -37,11 +37,15 @@ because wording is not behavior; presence and the resulting decision are.
   error.
 - Goldens are captured from Python only (parity/run.py --capture).
   Python run twice is byte-identical (parity/run.py --side py).
+- Generative cases run the real ask_generative. Python's transport is
+  redirected by patching _post_json in parity/py_gen_entry.py; the prompt,
+  JSON extraction, normalization and auto-fallback are untouched code.
+  The Rust side redirects via EYEWRIGHT_OLLAMA_URL (D7).
 
 ## Slice plan
 
 1. DONE  config + guards + HTTP eyes + decide_gate + ask (typed path)
-2.       generative engine + engine=auto fallback
+2. DONE  generative engine + engine=auto fallback
 3.       serve: /health, /health/deep, /v1/gate, /v1/ask, token,
          body cap, TLS
 4.       mcp stdio
@@ -49,24 +53,29 @@ because wording is not behavior; presence and the resulting decision are.
 
 ## Deviations
 
-D1  serve, mcp, the generative engine and the supervisor are absent.
+D1  serve, mcp and the supervisor are absent (slice 3+).
 D2  Uncaught errors: Python prints a traceback, Rust prints
     "eyewright: <msg>". Exit code 1 in both.
-D3  engine=auto has no generative fallback yet; it errors instead.
+D3  CLOSED in slice 2: engine=auto now falls back to the generative engine.
 D4  JSON formatting and key order differ. The object is the contract; the
     harness canonicalizes before comparing.
-D5  argmax tie-break: Python uses dict insertion order, Rust uses sorted
-    keys. Only reachable with tied probabilities and no explicit choice.
+D5  CLOSED in slice 2: serde_json preserve_order matches Python insertion
+    order, so argmax tie-breaks now agree.
 D6  round-half ties: Python uses banker's rounding, Rust multiplies and
     rounds. Only reachable at exact .00005 boundaries.
+D7  The generative transport reads EYEWRIGHT_OLLAMA_URL (default
+    http://localhost:11434) so the harness can redirect it to the stub.
+    Python hardcodes the URL. Payload construction and everything above the
+    transport are unchanged and compared.
 A1  --version was added (Python has no such flag). Harmless addition.
 
 ## Evidence
 
 - PARITY 22/22 against goldens captured from the untouched Python CLI.
 - Python determinism: 22/22 across two consecutive runs.
-- Mutation-tested: flipping the consensus direction check to accept any
-  direction turns the harness red (consensus-reject vs review-conflict).
+- Mutation-tested twice: flipping the consensus direction check to accept
+  any direction turns the harness red (consensus-reject vs review-conflict);
+  changing the no-normalization flag for "no" turns gen-prose red.
 - The first harness draft was vacuous: the stub bound an ephemeral port but
   the config pointed at a pre-picked one, so every request failed and the
   goldens recorded the failure path. The mutation test caught it. Fixed:

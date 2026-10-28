@@ -1,6 +1,16 @@
 //! Config shapes. Unknown keys are ignored, matching Python's `.get()` style.
 
 use serde::Deserialize;
+use serde_json::Value;
+
+#[derive(Deserialize, Default, Clone)]
+pub struct GenerativeCfg {
+    pub model: Option<String>,
+    pub options: Option<Value>,
+    pub format: Option<String>,
+    pub think: Option<bool>,
+    pub timeout_s: Option<f64>,
+}
 
 #[derive(Deserialize, Default, Clone)]
 pub struct Entry {
@@ -40,6 +50,7 @@ pub struct Cfg {
     pub retry_backoff_s: Option<f64>,
     pub timeout_s: Option<f64>,
     pub on_primary_unavailable: Option<String>,
+    pub generative: Option<GenerativeCfg>,
 }
 
 impl Cfg {

@@ -96,6 +96,9 @@ def main():
             if "raw" in step:
                 self._send(200, step["raw"])
                 return
+            if self.path.rstrip("/").endswith("/api/chat"):
+                self._send(200, {"message": {"content": step.get("content", "")}})
+                return
             self._send(200, {
                 "answers": answer_for(body.get("questions"), step),
                 "model": model,

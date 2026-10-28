@@ -1,0 +1,4 @@
+{
+  "exit": 0,
+  "stdout": "{\"answer\":\"no\",\"calibrated\":false,\"confidence\":0.3,\"engine\":\"generative\",\"kind\":\"noul\",\"model\":\"gen\",\"normalized\":true,\"raw\":\"Sure! {\\\"answer\\\":\\\"no\\\",\\\"confidence\\\":0.3} trailing }\",\"reason\":null}"
+}
