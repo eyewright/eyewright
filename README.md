@@ -15,6 +15,18 @@ AI harness.
   agreeing → consensus; one confident + another within 0.05 of main →
   review-conflict → the caller gathers more evidence.
 
+## Demo
+
+The gate on an agent-loop step — `"Is the task done?"`. The primary eye is
+unsure (`0.6663`), so both consults fire; they agree at `0.9938` and `0.9421`
+→ `consensus-accept`, `p_done 0.968`.
+
+![eyewright gate: the committee carries a wavering primary](docs/demo/eyewright-demo.gif)
+
+Two-beat version with the `review-low` case:
+[`docs/demo/eyewright-demo.mp4`](docs/demo/eyewright-demo.mp4). Both are
+generated from VHS tapes — see [`docs/demo/`](docs/demo/README.md).
+
 ## Install
 
 ```powershell
