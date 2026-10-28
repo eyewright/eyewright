@@ -89,11 +89,15 @@ A1  --version was added (Python has no such flag). Harmless addition.
   two serve cases red (9/11); changing MCP serverInfo.version turns id=1 red
   (6/7).
 - serve.py starts both HTTP servers against their own stub, replays the same
-  11 requests, and compares status, canonical body and Content-Type. It
-  covers health, deep health, both auth paths, gate, ask, invalid JSON, the
-  body cap and 404s.
+  requests, and compares status, canonical body and Content-Type. It covers
+  health, deep health, both auth paths, gate, ask, invalid JSON, the body cap,
+  404s, and the exact deep-health routing from #25 (/health?deep=1 is deep;
+  /health/deepish and /v1/deepseek are 404).
 - mcp_parity.py drives both stdio servers with the same 7 JSON-RPC messages
   (initialize, tools/list, gate, ask, unknown tool, ping, unknown method).
+- A parallel session fixed #25 (exact deep-health routing) and #26 (warn on
+  --token) and mirrored both into the Rust port; serve.py now covers the #25
+  cases and passes 16/16.
 - The first harness draft was vacuous: the stub bound an ephemeral port but
   the config pointed at a pre-picked one, so every request failed and the
   goldens recorded the failure path. The mutation test caught it. Fixed:
