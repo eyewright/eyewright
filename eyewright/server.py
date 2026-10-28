@@ -32,6 +32,22 @@ def _is_loopback(host):
     return host in LOOPBACK
 
 
+def _route(target):
+    """Split a request target into (path, query terms), normalised.
+
+    Exact matching matters: deep health used to be gated on ``"deep" in path``,
+    so ``/v1/deepseek`` or ``/health/deepish`` counted as deep health, answered
+    401 instead of 404, and ran the slow dependency probes (#25).
+    """
+    raw, _, query = target.partition("?")
+    return (raw.rstrip("/") or "/"), (query.split("&") if query else [])
+
+
+def _is_deep(path, query):
+    """Whether a GET should run the deep-health probes (and so require auth)."""
+    return path == "/health/deep" or (path == "/health" and "deep=1" in query)
+
+
 def _dependency_checks(cfg):
     """Health URLs for the configured eyes (deduped by label)."""
     checks = {}
@@ -92,16 +108,18 @@ def make_handler(cfg, token=None, max_body=DEFAULT_MAX_BODY):
                 remaining -= len(chunk)
 
         def do_GET(self):
-            deep = "deep" in self.path
+            path, query = _route(self.path)
+            # Only /health can opt into deep health; a stray ?deep=1 on another
+            # path must fall through to 404, not run the probes.
+            deep = _is_deep(path, query)
             if deep and not self._authorized():
                 self._send(401, {"error": "unauthorized"})
                 return
-            if self.path.startswith("/health"):
-                if deep:
-                    self._send(200, deep_health(cfg))
-                else:
-                    self._send(200, {"status": "ok", "service": "eyewright", "version": __version__})
-            elif self.path == "/":
+            if deep:
+                self._send(200, deep_health(cfg))
+            elif path == "/health":
+                self._send(200, {"status": "ok", "service": "eyewright", "version": __version__})
+            elif path == "/":
                 self._send(200, {"status": "ok", "service": "eyewright", "version": __version__})
             else:
                 self._send(404, {"error": "not found"})

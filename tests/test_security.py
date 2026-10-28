@@ -61,6 +61,24 @@ def main():
     # 5. an ordinary key path is not rejected (missing file -> empty string)
     assert G.load_key("~/.laya-api-key-definitely-missing") == ""
 
+    # 6. deep health is matched exactly (#25): a path that merely contains "deep"
+    #    must not be gated as deep health (401 instead of 404) or run the probes.
+    from eyewright.server import _is_deep, _route
+
+    def is_deep(target):
+        return _is_deep(*_route(target))
+
+    assert _route("/") == ("/", [])
+    assert _route("/health/") == ("/health", [])
+    assert is_deep("/health/deep")
+    assert is_deep("/health/deep?x=1")
+    assert is_deep("/health/?deep=1")
+    assert is_deep("/health?deep=1")
+    assert not is_deep("/health")
+    assert not is_deep("/health?deep=0")
+    for target in ("/v1/deepseek", "/health/deepish", "/deep", "/v1/x?deep=1"):
+        assert not is_deep(target), target
+
     print("ALL SECURITY TESTS PASSED")
 
 
