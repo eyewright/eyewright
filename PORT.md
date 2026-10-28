@@ -53,6 +53,15 @@ because wording is not behavior; presence and the resulting decision are.
 4. DONE  mcp stdio
 5.       supervisor/tray - not planned; platform UI with no cheap oracle
 
+## Phase 5 evidence
+
+2026-10-27, live eyes (laya-serve :8000, Ollama :11434), examples/gate.json.
+
+- Determinism: 8/8. The same question sent twice to the Python server gave
+  identical p_done, decision and trace, including three consult-path cases.
+- Shadow: 8/8. The same eight questions sent to the Python and Rust servers
+  gave identical responses. Corpus: parity/shadow.py QUESTIONS.
+
 ## Deviations
 
 D1  The supervisor/tray is absent. TLS (--cert/--key) is deferred: the Rust
