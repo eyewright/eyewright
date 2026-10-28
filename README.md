@@ -116,9 +116,11 @@ uv run eyewright serve --port 8090
 ```
 
 Auth & TLS: `serve` is loopback-only by default. Binding off-loopback
-(`--host 0.0.0.0`) **requires** a bearer token (`--token` / `$EYEWRIGHT_TOKEN`),
-and requests must send `Authorization: Bearer <token>`. Add `--cert`/`--key` to
-serve HTTPS. The token is authentication, not encryption — off-loopback use TLS
+(`--host 0.0.0.0`) **requires** a bearer token, and requests must send
+`Authorization: Bearer <token>`. Set it via **`$EYEWRIGHT_TOKEN`** — a token
+passed as `--token` is visible to any local user in the process list (`ps`,
+`Win32_Process`), so the CLI warns when you use it. Add `--cert`/`--key` to
+serve HTTPS. The token is authentication, not encryption - off-loopback use TLS
 (or an SSH/VPN tunnel). Request bodies are capped (default 1 MB).
 
 **MCP** (for any AI harness)

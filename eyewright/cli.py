@@ -49,8 +49,9 @@ def main(argv=None):
     s = sub.add_parser("serve", help="HTTP service (/v1/gate, /v1/ask)")
     s.add_argument("--host", default="127.0.0.1")
     s.add_argument("--port", type=int, default=8090)
-    s.add_argument("--token", help="bearer token for requests (default: $EYEWRIGHT_TOKEN); "
-                                   "required when binding off-loopback")
+    s.add_argument("--token", help="bearer token (prefer $EYEWRIGHT_TOKEN: a value passed "
+                                   "here is visible in the process list); required when "
+                                   "binding off-loopback")
     s.add_argument("--max-body", type=int, default=1000000, help="max request body bytes")
     s.add_argument("--cert", help="TLS certificate (PEM) -> serve HTTPS")
     s.add_argument("--key", help="TLS private key (PEM)")
@@ -80,6 +81,11 @@ def main(argv=None):
     if args.cmd == "serve":
         from .server import serve
 
+        if args.token:
+            # Process arguments are readable by any local user (`ps`, Win32_Process);
+            # the env var is already supported and is the safe path (#26).
+            print("[eyewright] warning: --token is visible in the process list; "
+                  "prefer EYEWRIGHT_TOKEN", file=sys.stderr)
         serve(cfg, args.host, args.port, token=args.token, max_body=args.max_body,
               cert=args.cert, key=args.key)
         return 0

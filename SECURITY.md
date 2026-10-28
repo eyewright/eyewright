@@ -28,10 +28,16 @@ eyewright runs **local, trusted configuration and code**. Two boundaries matter:
 ## Serving
 
 `eyewright serve` is **loopback-only by default**. Binding off-loopback
-(`--host 0.0.0.0`) **requires** a bearer token (`--token` / `$EYEWRIGHT_TOKEN`)
-and the server sends `401` without it. Use `--cert`/`--key` for HTTPS, or a
-TLS terminator / SSH-VPN tunnel. The token authenticates callers; it is **not**
-encryption. Request bodies are capped (default 1 MB).
+(`--host 0.0.0.0`) **requires** a bearer token and the server sends `401`
+without it. Set it through **`$EYEWRIGHT_TOKEN`**: a token passed as `--token`
+lands in the process arguments, which any local user can read (`ps`,
+`Win32_Process`), so the CLI warns when `--token` is used. Use `--cert`/`--key`
+for HTTPS, or a TLS terminator / SSH-VPN tunnel. The token authenticates
+callers; it is **not** encryption. Request bodies are capped (default 1 MB).
+
+Deep health (`GET /health/deep`, or `/health?deep=1`) runs the dependency
+probes and so is the only health route that needs auth; the match is exact, so
+a path that merely contains "deep" is a plain `404`.
 
 ## Egress
 
