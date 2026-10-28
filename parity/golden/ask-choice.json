@@ -1,0 +1,4 @@
+{
+  "exit": 0,
+  "stdout": "{\"answer\":\"b\",\"confidence\":0.9,\"kind\":\"choice\",\"model\":\"p\",\"probabilities\":{\"a\":0.1,\"b\":0.9},\"trace\":{\"engine\":\"p\"}}"
+}

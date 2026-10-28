@@ -1,0 +1,4 @@
+{
+  "exit": 0,
+  "stdout": "{\"decision\":\"consensus-accept\",\"p_done\":0.94,\"trace\":{\"consults\":{\"c1\":0.95,\"c2\":0.93},\"decision\":\"consensus-accept\",\"policy\":\"fallback\",\"primary\":0.85}}"
+}

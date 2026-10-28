@@ -12,3 +12,4 @@ bench/responses-*.jsonl
 # audit / scratch working files (local only; not shipped)
 .scratch/
 *.pid
+/rust/target/

@@ -1,0 +1,4 @@
+{
+  "exit": 0,
+  "stdout": "{\"decision\":\"review-no-signal\",\"p_done\":0.6,\"trace\":{\"consults\":{\"c1\":0.7,\"c2\":0.8},\"decision\":\"review-no-signal\",\"policy\":\"fallback\",\"primary\":0.6}}"
+}

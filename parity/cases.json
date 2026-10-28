@@ -1,0 +1,179 @@
+{
+  "cases": [
+    {
+      "name": "gate-accept-high",
+      "script": { "p": [0.9] },
+      "config": {}
+    },
+    {
+      "name": "gate-review-low",
+      "script": { "p": [0.4] },
+      "config": {}
+    },
+    {
+      "name": "gate-consensus-accept",
+      "script": { "p": [0.6], "c1": [0.95], "c2": [0.92] },
+      "config": {
+        "consults": [
+          { "name": "c1", "type": "systemone-http", "url": "{STUB}/v1/systemone", "model": "c1" },
+          { "name": "c2", "type": "systemone-http", "url": "{STUB}/v1/systemone", "model": "c2" }
+        ]
+      }
+    },
+    {
+      "name": "gate-consensus-reject",
+      "script": { "p": [0.6], "c1": [0.03], "c2": [0.05] },
+      "config": {
+        "consults": [
+          { "name": "c1", "type": "systemone-http", "url": "{STUB}/v1/systemone", "model": "c1" },
+          { "name": "c2", "type": "systemone-http", "url": "{STUB}/v1/systemone", "model": "c2" }
+        ]
+      }
+    },
+    {
+      "name": "gate-review-conflict-two-confident",
+      "script": { "p": [0.6], "c1": [0.95], "c2": [0.02] },
+      "config": {
+        "consults": [
+          { "name": "c1", "type": "systemone-http", "url": "{STUB}/v1/systemone", "model": "c1" },
+          { "name": "c2", "type": "systemone-http", "url": "{STUB}/v1/systemone", "model": "c2" }
+        ]
+      }
+    },
+    {
+      "name": "gate-review-weak",
+      "script": { "p": [0.6], "c1": [0.95], "c2": [0.7] },
+      "config": {
+        "consults": [
+          { "name": "c1", "type": "systemone-http", "url": "{STUB}/v1/systemone", "model": "c1" },
+          { "name": "c2", "type": "systemone-http", "url": "{STUB}/v1/systemone", "model": "c2" }
+        ]
+      }
+    },
+    {
+      "name": "gate-review-conflict-close",
+      "script": { "p": [0.6], "c1": [0.95], "c2": [0.62] },
+      "config": {
+        "consults": [
+          { "name": "c1", "type": "systemone-http", "url": "{STUB}/v1/systemone", "model": "c1" },
+          { "name": "c2", "type": "systemone-http", "url": "{STUB}/v1/systemone", "model": "c2" }
+        ]
+      }
+    },
+    {
+      "name": "gate-review-no-signal",
+      "script": { "p": [0.6], "c1": [0.7], "c2": [0.8] },
+      "config": {
+        "consults": [
+          { "name": "c1", "type": "systemone-http", "url": "{STUB}/v1/systemone", "model": "c1" },
+          { "name": "c2", "type": "systemone-http", "url": "{STUB}/v1/systemone", "model": "c2" }
+        ]
+      }
+    },
+    {
+      "name": "gate-consult-error",
+      "script": { "p": [0.6], "c1": [{ "error": 500 }], "c2": [0.95] },
+      "config": {
+        "consults": [
+          { "name": "c1", "type": "systemone-http", "url": "{STUB}/v1/systemone", "model": "c1" },
+          { "name": "c2", "type": "systemone-http", "url": "{STUB}/v1/systemone", "model": "c2" }
+        ]
+      }
+    },
+    {
+      "name": "gate-retry-then-accept",
+      "script": { "p": [{ "error": 500 }, 0.9] },
+      "config": { "attempts": 2 }
+    },
+    {
+      "name": "gate-fallback-primary-down",
+      "script": { "p": [{ "error": 500 }], "c1": [0.95] },
+      "config": {
+        "on_primary_unavailable": "fallback",
+        "consults": [
+          { "name": "c1", "type": "systemone-http", "url": "{STUB}/v1/systemone", "model": "c1" }
+        ]
+      }
+    },
+    {
+      "name": "gate-review-policy",
+      "script": { "p": [{ "error": 500 }] },
+      "config": { "on_primary_unavailable": "review" }
+    },
+    {
+      "name": "gate-error-policy",
+      "script": { "p": [{ "error": 500 }] },
+      "config": { "on_primary_unavailable": "error" },
+      "stderr_contains": ["primary unavailable"]
+    },
+    {
+      "name": "gate-none-no-consults",
+      "script": { "p": [{ "error": 500 }] },
+      "config": {}
+    },
+    {
+      "name": "gate-timeout",
+      "script": { "p": [{ "sleep": 1.0 }] },
+      "config": { "timeout_s": 0.2 }
+    },
+    {
+      "name": "gate-thresholds-override",
+      "script": { "p": [0.85], "c1": [0.95], "c2": [0.93] },
+      "config": {
+        "accept_threshold": 0.9,
+        "consult_threshold": 0.5,
+        "consults": [
+          { "name": "c1", "type": "systemone-http", "url": "{STUB}/v1/systemone", "model": "c1" },
+          { "name": "c2", "type": "systemone-http", "url": "{STUB}/v1/systemone", "model": "c2" }
+        ]
+      }
+    },
+    {
+      "name": "guard-non-loopback",
+      "script": {},
+      "config": {
+        "primary": { "name": "p", "type": "systemone-http", "url": "http://192.0.2.1:9/x" }
+      },
+      "stdout_contains": ["non-loopback"]
+    },
+    {
+      "name": "guard-sensitive-key-file",
+      "script": {},
+      "config": {
+        "primary": {
+          "name": "p",
+          "type": "systemone-http",
+          "url": "{STUB}/v1/systemone",
+          "key_file": "~/.ssh/id_rsa"
+        }
+      },
+      "stdout_contains": ["sensitive credential file"]
+    },
+    {
+      "name": "ask-noul",
+      "cmd": ["ask"],
+      "script": { "p": [0.8] },
+      "config": {}
+    },
+    {
+      "name": "ask-choice",
+      "cmd": ["ask", "--choices", "{\"a\":\"first\",\"b\":\"second\"}"],
+      "script": {
+        "p": [{ "choice": "b", "probabilities": { "a": 0.1, "b": 0.9 }, "confidence": 0.9 }]
+      },
+      "config": {}
+    },
+    {
+      "name": "ask-score",
+      "cmd": ["ask", "--levels", "[\"low\",\"mid\",\"high\"]"],
+      "script": { "p": [{ "score": 3, "confidence": 0.7 }] },
+      "config": {}
+    },
+    {
+      "name": "ask-choice-error",
+      "cmd": ["ask", "--choices", "{\"a\":\"first\"}"],
+      "script": { "p": [{ "error": 500 }] },
+      "config": {}
+    }
+  ]
+}

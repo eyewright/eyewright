@@ -1,0 +1,4 @@
+{
+  "exit": 0,
+  "stdout": "{\"answer\":\"yes\",\"confidence\":0.8,\"kind\":\"noul\",\"p_true\":0.8,\"trace\":{\"consults\":{},\"decision\":\"accept\",\"policy\":\"fallback\",\"primary\":0.8}}"
+}

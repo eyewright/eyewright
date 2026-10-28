@@ -1,0 +1,4 @@
+{
+  "exit": 0,
+  "stdout": "{\"decision\":\"review-primary-unavailable\",\"p_done\":0.0,\"trace\":{\"consults\":{},\"decision\":\"review-primary-unavailable\",\"policy\":\"review\",\"primary_error\":\"<ERR>\"}}"
+}
