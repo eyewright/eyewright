@@ -7,9 +7,11 @@ Set Theme "Dracula"
 Set Shell "bash"
 Set TypingSpeed 12ms
 
-# Hidden setup: PATH for the ttyd shell, and a fresh install line on camera.
+# Hidden setup: PATH for the ttyd shell, a fresh install line on camera, and the
+# two states as variables so the commands on screen stay short enough not to wrap
+# (the README GIF renders at ~1100 px).
 Hide
-Type "uv tool uninstall eyewright >/dev/null 2>&1; export PATH=$HOME/.local/bin:$PATH; clear"
+Type "uv tool uninstall eyewright >/dev/null 2>&1; export PATH=$HOME/.local/bin:$PATH; S1='Done: all requested changes are implemented, tests pass, and the PR is merged.'; S2='Adds a retry loop around the API call; tests pass; no test for the retry path.'; Q='Is the task done?'; clear"
 Enter
 Sleep 500ms
 Show

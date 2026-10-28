@@ -1,7 +1,12 @@
-# Demo video
+# Demo
 
-`eyewright-demo.mp4` is **generated from a tape** by
+Two artefacts, **both generated from tapes** by
 [VHS](https://github.com/charmbracelet/vhs) — no screen recording, no human.
+
+| file | what | size |
+|---|---|---|
+| `eyewright-demo.mp4` | full demo, two beats, 2560x1440, ~21 s | for applications / release asset |
+| `eyewright-demo.gif` | one-beat teaser, 850x480, ~8 s | for the README (GitHub does not render `<video>` in markdown) |
 
 ## Render
 
@@ -9,22 +14,28 @@
 pwsh -File docs/demo/render.ps1
 ```
 
-Output: `docs/demo/eyewright-demo.mp4` (2560x1440, ~27 s).
+Produces both files. The tapes:
+
+- `eyewright-demo.tape` — the two-beat video.
+- `eyewright-readme.tape` — the teaser. One beat only, narrow canvas, cropped to
+  its content box afterwards (measured: 795x450 of 1100x560) so there is no dead
+  terminal around it, and sized at 850 px so a README column shows it 1:1
+  instead of downscaling 15 px text into mush.
 
 ## What it shows
 
-The gate on an agent-loop step (`"Is the task done?"`), twice:
+The gate on an agent-loop step (`"Is the task done?"`):
 
-1. `uv tool install eyewright` — a real install from PyPI.
-2. **The committee carries a wavering primary.** The primary eye is unsure
-   (`primary: 0.6663`), so both consults fire; they agree at `0.9938` and
-   `0.9421` → `consensus-accept`, `p_done 0.968`.
-3. **It says no without wasting a consult.** Clearly incomplete work scores
-   `0.197` → `review-low`, `consults: {}`.
+1. **The video, beat 1 — the committee carries a wavering primary.** The primary
+   is unsure (`primary: 0.6663`), so both consults fire; they agree at `0.9938`
+   and `0.9421` → `consensus-accept`, `p_done 0.968`. (This is the GIF.)
+2. **The video, beat 2 — it says no without wasting a consult.** Clearly
+   incomplete work scores `0.197` → `review-low`, `consults: {}`.
 
-Both outcomes are the product working as designed: it acts when the eyes agree
-and sends work back when they don't. The numbers are whatever the local models
-return on the render machine — the tape never prints a canned result.
+Both are the product working as designed: it acts when the eyes agree and sends
+work back when they don't. The numbers are whatever the local models return on
+the render machine — the tapes never print a canned result. They are stable
+across runs because the models run at temperature 0.
 
 ## Config matches the bench
 
@@ -41,7 +52,7 @@ config is portable.
 
 ## Prerequisites (this machine)
 
-- **WSL** (Ubuntu) with `vhs`, `ttyd`, `ffmpeg` on PATH, and `uv` (the tape runs
+- **WSL** (Ubuntu) with `vhs`, `ttyd`, `ffmpeg` on PATH, and `uv` (the tapes run
   `uv tool install eyewright`).
 - Local decision services reachable from WSL: **laya-serve `:8000`** (primary +
   `laya-multilingual`) and **Ollama `:11434`** (`tev1:4b`). Mirrored networking
@@ -50,9 +61,9 @@ config is portable.
 
 ## Notes
 
-- `Type` strings containing quotes use **backticks** in the tape.
-- `~/.local/bin` is not on the ttyd shell PATH; the tape adds it in a hidden
+- States live in hidden shell variables (`S1`, `S2`, `Q`) so the commands on
+  screen stay short enough not to wrap mid-word at teaser width.
+- `Type` strings containing quotes use **backticks** in a tape.
+- `~/.local/bin` is not on the ttyd shell PATH; both tapes add it in a hidden
   setup block.
-- The end card is a hidden cut: the command is typed and run inside `Hide`, so
-  the video never shows a `printf` being typed.
-- Re-render any time the CLI changes; the video is a build artifact.
+- Re-render any time the CLI changes; both files are build artifacts.
