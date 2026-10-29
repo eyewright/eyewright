@@ -29,12 +29,14 @@ pwsh -File supervisor/install.ps1 -Uninstall # remove
 Both branches write a per-user **Startup folder** entry (no admin); `-Tray` writes
 `eyewright tray.lnk` instead of a `.cmd` so no `cmd.exe` flashes.
 
-The tray must be launched with a **GUI-subsystem** `pythonw.exe`. `uv` builds the
-venv's `Scripts\pythonw.exe` as a copy of `python.exe` (console subsystem), which
-opens a terminal at logon. `install.ps1 -Tray` prefers the base uv `pythonw`
-(`%APPDATA%\uv\python\cpython-3.12-windows-x86_64-none\pythonw.exe`), and
-`tray.py` adds the venv's `Lib\site-packages` to `sys.path` so pystray/Pillow
-still import.
+`-Tray` starts the tray through `wscript.exe tray-hidden.vbs` with window style 0.
+Neither the venv's `pythonw.exe` (a copy of `python.exe`, i.e. console subsystem)
+nor `eyewright-tray.exe` is safe to start directly: the `gui-scripts` entry point
+is a uv **trampoline** that re-execs `pythonw`, and the re-exec does not inherit a
+hidden window, so the terminal comes back. Whoever creates the first console must
+be the process started with style 0 — hence the `.vbs`.
 
-Check a launcher before trusting it: PE subsystem `2` = GUI, `3` = console
-(optional header +0x44).
+Verify by window visibility, not by the process list: the console window still
+exists, it is just hidden. From an interactive session, enumerate windows and
+check `IsWindowVisible` for the `ConsoleWindowClass` owned by the tray's
+`pythonw` — it should be `false` while the process keeps running.

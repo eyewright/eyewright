@@ -58,15 +58,20 @@ if ($Tray) {
     # A .lnk (not a .cmd) means no cmd.exe flash at logon.
     Stop-FromPidFile 'svcwatch.pid'
     Remove-Item $cmdLauncher -ErrorAction SilentlyContinue
+    # A GUI-subsystem entry point is not enough: uv's launcher re-execs the venv's
+    # console-subsystem pythonw, which allocates a terminal. Start through wscript
+    # with window style 0 so neither the launcher nor its children get a window.
+    $vbs = Join-Path $here 'tray-hidden.vbs'
+    $wscript = Join-Path $env:WINDIR 'System32\wscript.exe'
     $sh = New-Object -ComObject WScript.Shell
     $l = $sh.CreateShortcut($lnkLauncher)
-    $l.TargetPath = $trayExe
-    $l.Arguments = $trayArgs
+    $l.TargetPath = $wscript
+    $l.Arguments = '"' + $vbs + '"'
     $l.WorkingDirectory = $repo
     $l.Description = 'eyewright tray (supervisor + Decide)'
     $l.Save()
     Write-Output "installed startup shortcut: $lnkLauncher"
-    Start-Process -FilePath $trayExe -ArgumentList $trayArgs -WorkingDirectory $repo -WindowStyle Hidden
+    Start-Process -FilePath $wscript -ArgumentList ('"' + $vbs + '"')
     Write-Output "started eyewright tray now"
     return
 }
