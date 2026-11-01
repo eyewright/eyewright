@@ -11,8 +11,7 @@ function Log([string]$m) {
     Add-Content -Path $log -Value $l
 }
 
-$env:OPENROUTER_API_KEY = & python -c "import json,os;print(json.load(open(os.path.expanduser('~/.local/share/opencode/auth.json'),encoding='utf-8'))['openrouter']['key'])"
-if (-not $env:OPENROUTER_API_KEY) { Log 'WARN: no OpenRouter key found' }
+if (-not $env:OPENROUTER_API_KEY) { throw 'set OPENROUTER_API_KEY before running this pipeline' }
 
 Log 'run: typesafe/jev-router (openrouter, 8 workers)'
 & uv run python run_generative_noul.py --engine openrouter --model typesafe/jev-router `
