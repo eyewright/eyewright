@@ -4,6 +4,8 @@ version = "0.4.0"
 edition = "2021"
 rust-version = "1.99"
 description = "eyewright - local decision core (Rust core slice)"
+license = "Apache-2.0"
+repository = "https://github.com/eyewright/eyewright"
 
 [[bin]]
 name = "eyewright"

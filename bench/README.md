@@ -15,12 +15,13 @@ directory** (they read the saved response files by name).
   ai-cache dir; unique temp + atomic replace).
 - `build_von_labels.py` — rebuild `von-labels-train.jsonl` from the
   typed-decisions train parquet (`%EYEWRIGHT_DATASETS%`, default
-  `D:/datasets/typed-decisions`).
+  `~/ai-cache/datasets/typed-decisions`).
 - `score.py`, `run_laya.py`, `run_systemone.py`, `export_cases.py` — the
   original decision-model bench harness.
 
 Data in repo: `cases.jsonl` (400 test cases), `cases-train*.jsonl`,
-`von-labels-train.jsonl`, `von-calibration.json`.
+`von-labels-train.jsonl`, `von-calibration.json`. The case data is synthetic:
+emails use reserved `example.*` domains and IPs use RFC 5737 test ranges.
 
 The per-model `responses-*.jsonl` are **not** committed — they are bulky and
 regenerable with the runners below. Regenerate them, or restore from a local /
@@ -34,6 +35,6 @@ uv run python gate_analysis.py
 uv run python von_calibration_check.py
 ```
 
-Keys live outside the repo (secrets): `the private research repo/decision-bench/.laya-api-key`,
+Keys live outside the repo (secrets): `~/.config/eyewright/laya-api-key`,
 `.von-api-key`. The calibrated von run is written to
 `%USERPROFILE%\ai-cache\von-calibrated\` (outside git).

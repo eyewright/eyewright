@@ -75,7 +75,7 @@ does not transfer (test Brier 0.2473 -> 0.2548, ECE 0.1246 -> 0.1252); it made v
 more willing to speak, its one consensus call was wrong, and its new confidence mostly surfaced
 as *conflict* (19 -> 31) rather than agreement. Von remains: an agent/tool-domain
 candidate, a calibration case study, and a base for the home-grown head
-(`TICKETS/2026-10-06-decide-engine-shootout.md`).
+(`bench/DECIDE-SHOOTOUT.md`).
 
 Operational note: the first calibrated replay was corrupted by two concurrent replays
 (duplicate watchers) interleaving appends into the same file. Calibrated outputs now write to
@@ -88,13 +88,13 @@ and land via unique-temp + atomic replace.
 with `torch.load(..., weights_only=True)` (`option_marker_backend.py:549`), which restricts
 unpickling to tensors and is the accepted mitigation; the backbone ships as safetensors. General
 practice: trust the source, require `weights_only=True`, optionally scan with picklescan, or
-convert to safetensors once. Same rule applies to any `.bin`/`.pt`/`.pth` in D:\ai-models.
+convert to safetensors once. Same rule applies to any `.bin`/`.pt`/`.pth` in the local models directory.
 
 ## Operational notes
 
 - laya-serve serves the multilingual checkpoint on demand: pass `"model": "multilingual"` in the
   Jev request (routing.reason = "explicit model='multilingual'"); no second server needed.
-- Both servers are keyed: `decision-bench/.laya-api-key`, `decision-bench/.von-api-key`.
+- Both servers are keyed: `~/.config/eyewright/laya-api-key`, `~/.config/eyewright/von-api-key`.
 - clef-flash is deferred: "non-finite logit" server error on Ollama 0.35.1 (latest); retry the
   `9b-mxfp8` tag or a future Ollama version.
 

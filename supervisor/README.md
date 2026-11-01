@@ -2,7 +2,7 @@
 
 Tiny keep-alive supervisor for local model services (`laya-serve`, optionally
 `ollama`). Reads `services.json`, probes each health URL, starts missing services
-detached, and restarts with backoff. Generic on purpose — an agent control plane's Model Router can
+detached, and restarts with backoff. Generic on purpose - any service runner can
 adopt the same descriptor later.
 
 ```powershell

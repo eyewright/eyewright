@@ -2,8 +2,8 @@
 
 Reads a ``services.json`` descriptor and keeps each enabled service running:
 probes its health URL, starts it (detached) when down, restarts with backoff,
-and logs. The descriptor is deliberately generic so an agent control plane's Model Router (M3
-adapter family) can adopt the same contract later.
+and logs. The descriptor is deliberately generic so any service runner can
+adopt the same contract later.
 
     eyewright-svcwatch --status
     eyewright-svcwatch --once        # start anything down, exit

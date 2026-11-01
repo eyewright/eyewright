@@ -1,7 +1,6 @@
 # DECIDE-SHOOTOUT — gate-engine ranking (2026-10-09)
 
-Outcome of the decide-engine shootout
-(`the private research repo/TICKETS/2026-10-06-decide-engine-shootout.md`). Numbers are on the
+Outcome of the 2026-10-06 decide-engine shootout. Numbers are on the
 600-noul gate proxy: the test 600 (`SCREENING-2026-10-09*.md`) and a **frozen
 holdout** (600 of the 1,800 train rows; calibration fit on the other 1,200 —
 `HOLDOUT-2026-10-09.md`, `CALIBRATION-2026-10-09.md`). Screening, not confirmatory

@@ -1,8 +1,16 @@
 """Export typed-decisions test split to cases.jsonl with parsed state/questions/gold."""
+import os
+from pathlib import Path
+
 import pandas as pd
 import json
 
-SRC = r"D:\datasets\typed-decisions\all\test-00000-of-00001.parquet"
+SRC = Path(
+    os.environ.get(
+        "EYEWRIGHT_DATASETS",
+        os.path.expanduser("~/ai-cache/datasets/typed-decisions"),
+    )
+) / "all" / "test-00000-of-00001.parquet"
 OUT = "cases.jsonl"
 
 df = pd.read_parquet(SRC)
