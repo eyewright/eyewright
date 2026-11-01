@@ -1,12 +1,10 @@
 # eyewright
 
 **eyewright** — the decision core of the local-agent stack. A committee of local
-decision models behind one callable: used at the *decide* step of **Orbit** (the
-worker loop — currently a private sibling repo), and available to any program or
-AI harness.
+decision models behind one callable, used at the *decide* step of an agent worker
+loop and available to any program or AI harness.
 
 > **Name:** `eyewright` throughout — distribution, import, CLI, and MCP tools.
-> Decision + registry status: **ADR-0005** (`the private research repo/docs/decisions/`).
 
 - **Third eye (main):** `laya-typed-decisions` — local specialist, 0.766 acc /
   Brier 0.019 on the typed-decisions bench.
@@ -130,8 +128,8 @@ uv run eyewright mcp
 ```
 Smoke test: `uv run python tests/mcp_smoke.py`.
 
-Wired into OpenCode + Cursor on this machine. Use the **venv exe directly** so a
-harness reload never triggers a `uv sync`/lock cycle:
+Example harness wiring. Use the **venv exe directly** so a harness reload never
+triggers a `uv sync`/lock cycle:
 
 ```jsonc
 "eyewright": {
@@ -184,7 +182,7 @@ von is retired from the consult roster (2026-10-06). See `docs/THREE-EYE.md`.
 
 | service | address | notes |
 |---|---|---|
-| laya-serve | `127.0.0.1:8000` | key file in `the private research repo/decision-bench/`. **Default checkpoint is `english`** — always pass `"model":"typed-decisions"` for the specialist (or `"multilingual"`); the router only auto-routes when `LAYA_AUTO_TASK=1` |
+| laya-serve | `127.0.0.1:8000` | key file at `~/.config/eyewright/laya-api-key`. **Default checkpoint is `english`** — always pass `"model":"typed-decisions"` for the specialist (or `"multilingual"`); the router only auto-routes when `LAYA_AUTO_TASK=1` |
 | Ollama | `127.0.0.1:11434` | `tev1:4b` via `/v1/systemone` |
 | von | `127.0.0.1:8001` | `von-sdk`; retired as a consult |
 
@@ -212,8 +210,8 @@ von is retired from the consult roster (2026-10-06). See `docs/THREE-EYE.md`.
   probe, detached restart with backoff, logs, single instance. The descriptor is
   `$EYEWRIGHT_SERVICES`, else `<state>/services.json`, else
   `supervisor/services.json` in a checkout; `laya-serve`'s entry pins
-  `LAYA_DEFAULT_MODEL=typed-decisions`. The contract is generic — an agent control plane's Model
-  Router can adopt it.
+  `LAYA_DEFAULT_MODEL=typed-decisions`. The contract is generic — any service
+  runner can adopt it.
 - **Caller**: `decide_gate` retries the primary (`attempts`, `retry_backoff_s`;
   `retries` is a legacy alias for attempts-beyond-first) and applies
   `on_primary_unavailable`: `fallback` (default) / `review` / `error`. Per-eye
@@ -240,12 +238,11 @@ loopback-only by default; see "Auth & TLS" above. Report vulnerabilities per
 ## Roadmap
 
 1. ✅ `eyewright ask` (package + CLI) and `eyewright serve` (HTTP).
-2. ✅ `eyewright mcp` (stdio MCP: `eyewright_gate`, `eyewright_ask`) — wired into the
-   OpenCode and Cursor configs.
+2. ✅ `eyewright mcp` (stdio MCP: `eyewright_gate`, `eyewright_ask`) — usable from
+   any MCP-capable harness (OpenCode, Cursor, Claude Desktop, ...).
 3. ✅ Generative engine behind `ask` (`--engine generative` / `auto`).
-4. Next: post-hoc calibration of the generative engine (ticket path D); wire as
-   a verifier provider into an agent control plane's Audit plane / control-plane's verifier
-   family (advisory, never the truth).
+4. Next: post-hoc calibration of the generative engine; wire it as an advisory
+   verifier provider into an agent control plane (never the source of truth).
 
 ## License
 

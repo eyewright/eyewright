@@ -9,9 +9,10 @@ fast comparisons — label results *exploratory*.
 
 - Decision models are called through their **native decision APIs** (`/v1/systemone`),
   not chat-prompted.
-- **Raw responses are committed** per candidate (`responses-*.jsonl`) — re-scorable.
+- **Raw responses are not committed** (`responses-*.jsonl`) - they are bulky and
+  regenerable with the runners; every table here is derived from them.
 - Calibration discipline: refits are fitted on the **train** split, scored on test.
-- Local models are versioned by **digest** (the private research repo snapshots); protocol written
+- Local models are versioned by **digest** (local model snapshots); protocol written
   down (THREE-EYE.md).
 - The bench targets the gate's exact shape (noul confidence), with cost/latency
   considered in GATE-ANALYSIS.

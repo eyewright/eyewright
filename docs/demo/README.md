@@ -54,7 +54,7 @@ The only demo-only difference from `examples/gate.json` is that it drops
 `key_file`: the loopback `laya-serve` accepts requests without auth, so the demo
 config is portable.
 
-## Prerequisites (this machine)
+## Prerequisites
 
 - **WSL** (Ubuntu) with `vhs`, `ttyd`, `ffmpeg` on PATH, and `uv` (the tapes run
   `uv tool install eyewright`).

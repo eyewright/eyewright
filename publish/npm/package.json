@@ -6,8 +6,7 @@
     "eyewright",
     "decision-gate",
     "local-first",
-    "mcp",
-    "oracle"
+    "mcp"
   ],
   "homepage": "https://github.com/eyewright/eyewright",
   "repository": {

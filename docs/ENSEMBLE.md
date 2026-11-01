@@ -66,11 +66,11 @@ does not help here.
 Reproduce:
 
 ```powershell
-cd the private research repo\decision-bench
+cd bench
 uv run python .\ensemble.py --members laya-typed-decisions tev1:4b laya-multilingual
 uv run python .\ensemble_bins.py
 ```
 
-Companion long-context check ("Total Recall" recall case on the history of hand planes):
-`recall/RESULTS.md` - tev1:4b scored 10/10 vs main 7/10, trio 8/10 on a single 10-question
-prose-recall case; see that file for the endpoint input-cap caveat.
+Companion long-context check ("Total Recall" recall case on the history of hand planes, not
+shipped in this repo): tev1:4b scored 10/10 vs main 7/10, trio 8/10 on a single 10-question
+prose-recall case; the endpoint input cap is the caveat.

@@ -4,7 +4,7 @@
     "laya-serve": {
       "enabled": true,
       "cmd": ["uv", "run", "--with", "laya[serve]", "laya-serve"],
-      "cwd": "~/.config/eyewright",
+      "cwd": "%USERPROFILE%",
       "health": "http://127.0.0.1:8000/health",
       "env": { "LAYA_DEFAULT_MODEL": "typed-decisions" },
       "restart": { "backoff_s": [5, 15, 60, 300], "startup_grace_s": 60 },

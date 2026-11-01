@@ -3,7 +3,7 @@
 $ErrorActionPreference = 'Continue'
 Set-Location $PSScriptRoot
 $log = "calibration-$(Get-Date -Format yyyy-MM-dd).log"
-$key = Join-Path $env:OneDrive "Documents\Default Project\the private research repo\decision-bench\.laya-api-key"
+$key = if ($env:EYEWRIGHT_LAYA_KEY) { $env:EYEWRIGHT_LAYA_KEY } else { Join-Path $env:USERPROFILE ".config\eyewright\laya-api-key" }
 
 function Log([string]$m) {
     $l = "{0}  {1}" -f (Get-Date -Format 'HH:mm:ss'), $m
@@ -11,7 +11,7 @@ function Log([string]$m) {
     Add-Content -Path $log -Value $l
 }
 
-$env:OPENROUTER_API_KEY = & python -c "import json,os;print(json.load(open(os.path.expanduser('~/.local/share/opencode/auth.json'),encoding='utf-8'))['openrouter']['key'])"
+if (-not $env:OPENROUTER_API_KEY) { throw 'set OPENROUTER_API_KEY before running this pipeline' }
 
 Log 'build train cases + fit/holdout split'
 & uv run python build_train_cases.py *>> $log

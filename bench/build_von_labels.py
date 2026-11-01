@@ -10,7 +10,10 @@ from pathlib import Path
 import pandas as pd
 
 SRC = Path(
-    os.environ.get("EYEWRIGHT_DATASETS", "D:/datasets/typed-decisions")
+    os.environ.get(
+        "EYEWRIGHT_DATASETS",
+        os.path.expanduser("~/ai-cache/datasets/typed-decisions"),
+    )
 ) / "all" / "train-00000-of-00001.parquet"
 OUT = Path(__file__).parent / "von-labels-train.jsonl"
 

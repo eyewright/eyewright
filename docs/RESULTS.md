@@ -19,7 +19,7 @@ decision APIs, not chat prompting.
 | `laya-english` | general, zero-shot | 0.362 | 0.288 | 0.487 | 0.323 | 0.101 | 0.569 | 2,496 ms |
 | `laya-multilingual` | general, zero-shot | 0.352 | 0.295 | 0.497 | 0.286 | 0.155 | 1.089 | 920 ms |
 
-\* Measured on this machine: tev1 on the RTX 5060 Ti via Ollama; Laya on CPU torch. Not comparable
+\* Measured on the reference rig: tev1 on the RTX 5060 Ti via Ollama; Laya on CPU torch. Not comparable
 to published T4 numbers (Laya claims ~33-40 ms on GPU).
 
 ### Published reference rows (vendor/third-party, not measured here)
@@ -70,12 +70,12 @@ All runs complete; `tev1:4b` row added 2026-10-04.
 ## Reproduce
 
 ```powershell
-cd the private research repo\decision-bench
+cd bench
 uv run python .\export_cases.py
 uv run python .\run_systemone.py --model tev1:0.8b          # or tev1:4b
-uv run --with laya --with torch --with numpy python .\run_laya.py --checkpoint "D:\ai-models\state\laya-typed-decisions" --name laya-typed-decisions
+uv run --with laya --with torch --with numpy python .\run_laya.py --checkpoint "%USERPROFILE%\ai-models\state\laya-typed-decisions" --name laya-typed-decisions
 uv run python .\score.py --files responses-tev1_0.8b.jsonl responses-laya-laya-typed-decisions.jsonl
 ```
 
-Second head-to-head candidates on disk: `D:\datasets\fast-decisions` (17 operational classification
-domains, dev split) and `D:\datasets\Open-Jev` (control-style artifacts with its own REPRODUCTION.md).
+Second head-to-head candidates on disk: `%USERPROFILE%\ai-cache\datasets\fast-decisions` (17 operational classification
+domains, dev split) and `%USERPROFILE%\ai-cache\datasets\Open-Jev` (control-style artifacts with its own REPRODUCTION.md).

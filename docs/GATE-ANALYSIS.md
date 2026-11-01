@@ -49,7 +49,7 @@ between gemma4 and coderx.
 1. **Default gate: laya-TD alone**, accept on confidence, review below threshold.
 2. **Cascade, not always-trio**: when laya's confidence is low, *then* ask tev1:4b; agree = accept,
    disagree = review. That recovers the committee's review-queue value at a fraction of the cost -
-   and it is exactly the routing-cascade pattern an agent control plane's M3 Router is specified for.
+   and it is exactly the routing-cascade pattern an agent model router is specified for.
 3. **Drop laya-multilingual from English loops**; keep it configured for multilingual states only.
 4. Keep the full-trio policy available as a config switch for comparison runs.
 
