@@ -467,7 +467,7 @@ def check() -> int:
     print(
         f"ok: state assembly + tray eye + configs "
         f"(gate={CONFIG.name if gate else 'none'}, services={SERVICES.name if services else 'none'}); "
-        f"state dir={home()}"
+        f"state dir={home().name}"
     )
     return 0
 
