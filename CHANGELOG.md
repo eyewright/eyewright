@@ -2,7 +2,12 @@
 
 Notable changes to eyewright. Versions are the distribution version.
 
-## Unreleased
+## 0.4.1 - 2026-11-06
+
+- Publish the tray and supervisor entry points. 0.4.0 shipped only the `eyewright`
+  console script, so `pip install eyewright[tray]` resolved without `pystray` and
+  no `eyewright-tray` command existed. 0.4.1 declares both extras (`mcp`, `tray`)
+  and both scripts (`eyewright-svcwatch`, `eyewright-tray`).
 
 - Project env: new default `runtime` dependency group (`mcp`, `pystray`, `pillow`).
   `uv sync` is exact and prunes extras, so the venv kept losing the MCP package
